@@ -21,7 +21,7 @@ static/uploads/
 static/results/
 images_processed/
 images_to_process/
-
+credentials/
 # --- Archivos de backup o compresión ---
 *.zip
 *.tar.gz
