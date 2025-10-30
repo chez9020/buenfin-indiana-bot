@@ -1,0 +1,337 @@
+<!DOCTYPE html>
+<html lang="es">
+<head>
+<meta charset="UTF-8">
+<meta name="viewport" content="width=device-width, initial-scale=1.0">
+<title>Panel de Tickets - Buen Fin Indiana</title>
+<style>
+    body {
+    background-color: #D1CCCB;
+    color: #e0e0e0;
+    font-family: 'Segoe UI', Tahoma, Geneva, Verdana, sans-serif;
+    margin: 0;
+    padding: 30px;
+    }
+
+    h1 {
+    text-align: center;
+    color: #070707;
+    font-size: 2em;
+    margin-bottom: 30px;
+    }
+
+    table {
+    width: 100%;
+    border-collapse: collapse;
+    background: rgba(123, 123, 129, 0.85);
+    color: #070707;
+    border-radius: 12px;
+    overflow: hidden;
+    box-shadow: 0 0 25px rgba(0,0,0,0.5);
+    }
+
+    th, td {
+    padding: 12px 15px;
+    text-align: center;
+    }
+
+    th {
+    background-color: #564E4D;
+    color: #0E0C0C;
+    text-transform: uppercase;
+    letter-spacing: 0.05em;
+    }
+
+    tr:nth-child(even) {
+    background-color: rgba(255, 255, 255, 0.02);
+    }
+
+    tr:hover {
+    background-color: rgba(0, 191, 166, 0.1);
+    }
+
+    input[type="number"] {
+    width: 120px;
+    background: #1e2129;
+    border: 1px solid #333;
+    color: #00e0b5;
+    text-align: right;
+    padding: 6px;
+    border-radius: 6px;
+    transition: border-color 0.3s ease, background 0.3s ease;
+    }
+
+    input[type="number"]:focus {
+    outline: none;
+    border-color: #00bfa6;
+    background: #262a34;
+    }
+
+    button {
+    border: none;
+    color: #fff;
+    padding: 8px 14px;
+    border-radius: 6px;
+    cursor: pointer;
+    font-weight: bold;
+    font-size: 0.9em;
+    transition: background 0.3s ease, transform 0.1s ease;
+    }
+
+    button:hover {
+    transform: scale(1.05);
+    }
+
+    .btn-asignar {
+    background: linear-gradient(90deg, #009c70, #00bfa6);
+    }
+
+    .btn-asignar:hover {
+    background: linear-gradient(90deg, #00bfa6, #00ffc2);
+    }
+
+    .btn-actualizar {
+    background: linear-gradient(90deg, #0077ff, #0099ff);
+    }
+
+    .btn-actualizar:hover {
+    background: linear-gradient(90deg, #0099ff, #33bbff);
+    }
+
+    footer {
+    text-align: center;
+    margin-top: 40px;
+    color: #000000;
+    font-size: 0.85em;
+    }
+
+    .status {
+    text-align: right;
+    margin-bottom: 15px;
+    color: #000000;
+    font-size: 0.9em;
+    }
+
+    /* === Animaciones para nuevas filas === */
+    @keyframes fadeInSlide {
+    from {
+        opacity: 0;
+        transform: translateY(-10px);
+    }
+    to {
+        opacity: 1;
+        transform: translateY(0);
+    }
+    }
+
+    @keyframes highlight {
+    0%   { background-color: rgba(0, 255, 200, 0.3); }
+    100% { background-color: transparent; }
+    }
+
+    .nueva-fila {
+    animation: fadeInSlide 0.6s ease-out, highlight 2s ease-out;
+    }
+</style>
+</head>
+<body>
+
+<h1>Tickets pendientes de validación</h1>
+<p class="status">Actualizado: {{ hora_actual }} UTC</p>
+
+{% if tickets %}
+<table>
+  <thead>
+    <tr>
+      <th>#</th>
+      <th>TimeStamp</th>
+      <th>Nombre</th>
+      <th>Teléfono</th>
+      <th>Tienda</th>
+      <th>Monto OCR</th>
+      <th>Cantidad Detectada</th>
+      <th>Premio</th>
+      <th>TICKET</th>
+      <th>Acciones</th>
+    </tr>
+  </thead>
+  <tbody>
+    {% for t in tickets %}
+    <tr>
+      <td>{{ loop.index }}</td>
+      <td>{{ t.timestamp }}</td>
+      <td>{{ t.nombre }}</td>
+      <td>{{ t.telefono }}</td>
+      <td>{{ t.tienda }}</td>
+      <td>${{ t.monto }}</td>
+      <td>
+        <input type="number" id="cantidad_{{ loop.index }}" value="{{ t.cantidad_detectada or t.monto_ocr }}" step="0.01">
+      </td>
+      <td>{{ t.premio or "Pendiente" }}</td>
+      <td>
+      {% if t.ticket %}
+        <a href="{{ t.ticket }}" target="_blank" class="link-ticket">Ver ticket</a>
+      {% else %}
+        <span class="text-muted">Sin enlace</span>
+      {% endif %}
+      </td>
+      <td>
+        <!-- prettier-ignore -->
+        <button class="btn-asignar"
+                onclick="asignarPremio('{{ t.telefono }}', {{ loop.index }}, this)">
+        🎁 Asignar premio
+        </button>
+      </td>
+    </tr>
+    {% endfor %}
+  </tbody>
+</table>
+{% else %}
+<p style="text-align:center; color:#999;">No hay tickets pendientes.</p>
+{% endif %}
+
+<footer>
+  Buen Fin Indiana © {{ ano_actual }} | Panel interno de revisión
+</footer>
+
+<script>
+async function asignarPremio(telefono, index, btn) {
+  const input = document.getElementById(`cantidad_${index}`);
+  const cantidad_detectada = parseFloat(input.value);
+
+  if (isNaN(cantidad_detectada) || cantidad_detectada <= 0) {
+    alert("⚠️ Ingresa una cantidad válida antes de asignar el premio.");
+    return;
+  }
+
+  if (!confirm("¿Deseas asignar el premio a este participante?")) return;
+
+  btn.disabled = true;
+  btn.textContent = "⏳ Asignando...";
+
+  console.log("📤 Enviando asignación:", telefono, cantidad_detectada);
+
+  try {
+    const res = await fetch("/asignar-premio", {
+      method: "POST",
+      headers: { "Content-Type": "application/json" },
+      body: JSON.stringify({ telefono, cantidad_detectada })
+    });
+
+    const data = await res.json();
+    console.log("📥 Respuesta del servidor:", data);
+
+    if (data.status === "ok") {
+      btn.textContent = "✅ Asignado";
+      btn.style.backgroundColor = "#00b894";
+      btn.style.color = "#fff";
+
+      const row = btn.closest("tr");
+      row.style.transition = "opacity 0.5s, transform 0.5s";
+      row.style.opacity = "0";
+      row.style.transform = "translateX(50px)";
+      setTimeout(() => row.remove(), 600);
+
+      mostrarToast(`🎁 Premio "${data.premio}" asignado a ${data.telefono}`, "success");
+    } else {
+      mostrarToast(`❌ ${data.error || "Error al asignar"}`, "error");
+      btn.disabled = false;
+      btn.textContent = "🎁 Asignar premio";
+    }
+  } catch (err) {
+    console.error("Error en asignación:", err);
+    alert("🚨 Error de conexión con el servidor.");
+    btn.disabled = false;
+    btn.textContent = "🎁 Asignar premio";
+  }
+}
+
+function mostrarToast(mensaje, tipo = "success") {
+  const toast = document.createElement("div");
+  toast.textContent = mensaje;
+  toast.style.position = "fixed";
+  toast.style.bottom = "25px";
+  toast.style.right = "25px";
+  toast.style.background = tipo === "success" ? "#00ffc8" : "#ff6b6b";
+  toast.style.color = "#000";
+  toast.style.padding = "14px 22px";
+  toast.style.fontSize = "15px";
+  toast.style.borderRadius = "10px";
+  toast.style.boxShadow = "0 0 15px rgba(0,0,0,0.4)";
+  toast.style.transition = "opacity 0.6s ease, transform 0.4s ease";
+  toast.style.zIndex = 9999;
+  toast.style.opacity = "0";
+  toast.style.transform = "translateY(20px)";
+  document.body.appendChild(toast);
+
+  // Animar entrada
+  setTimeout(() => {
+    toast.style.opacity = "1";
+    toast.style.transform = "translateY(0)";
+  }, 50);
+
+  // Desaparecer luego de 3 segundos
+  setTimeout(() => {
+    toast.style.opacity = "0";
+    toast.style.transform = "translateY(20px)";
+  }, 3000);
+
+  // Remover del DOM
+  setTimeout(() => toast.remove(), 3600);
+}
+</script>
+
+</body>
+<script>
+let ultimaLista = [];
+
+// === Actualiza tabla sin recargar la página ===
+async function actualizarTabla() {
+  try {
+    const res = await fetch("/tickets-pendientes?ajax=1");
+    const data = await res.text();
+
+    const parser = new DOMParser();
+    const htmlDoc = parser.parseFromString(data, "text/html");
+
+    const nuevaTabla = htmlDoc.querySelector("table tbody");
+    const tablaActual = document.querySelector("table tbody");
+
+    if (!nuevaTabla || !tablaActual) return;
+
+    const nuevasFilas = Array.from(nuevaTabla.querySelectorAll("tr"));
+    const nuevosTelefonos = nuevasFilas.map(tr => tr.children[2]?.innerText?.trim());
+
+    // Detectar filas nuevas
+    const filasNuevas = nuevasFilas.filter(tr => {
+      const telefono = tr.children[2]?.innerText?.trim();
+      return telefono && !ultimaLista.includes(telefono);
+    });
+
+    // Actualizar la tabla completa
+    tablaActual.innerHTML = nuevaTabla.innerHTML;
+
+    // Aplicar animación a las filas nuevas
+    filasNuevas.forEach(fila => {
+      const telefono = fila.children[2]?.innerText?.trim();
+      const nuevaFila = Array.from(tablaActual.querySelectorAll("tr"))
+        .find(tr => tr.children[2]?.innerText?.trim() === telefono);
+      if (nuevaFila) nuevaFila.classList.add("nueva-fila");
+    });
+
+    ultimaLista = nuevosTelefonos;
+
+    // Actualiza la hora
+    const nuevaHora = htmlDoc.querySelector(".status")?.innerHTML;
+    const statusActual = document.querySelector(".status");
+    if (nuevaHora && statusActual) statusActual.innerHTML = nuevaHora;
+
+  } catch (error) {
+    console.warn("⚠️ Error al actualizar tabla:", error);
+  }
+}
+
+// Intervalo de actualización cada 15 segundos
+setInterval(actualizarTabla, 15000);
+</script>
+</html>

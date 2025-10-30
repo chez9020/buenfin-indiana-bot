@@ -1,0 +1,28 @@
+venv/
+.venv/
+.env
+*.env
+
+# --- Archivos temporales ---
+__pycache__/
+*.pyc
+*.pyo
+*.pyd
+*.log
+*.sqlite3
+
+# --- Archivos del sistema ---
+.DS_Store
+Thumbs.db
+
+# --- Carpetas de carga o procesamiento ---
+uploads/
+static/uploads/
+static/results/
+images_processed/
+images_to_process/
+
+# --- Archivos de backup o compresión ---
+*.zip
+*.tar.gz
+*.bak

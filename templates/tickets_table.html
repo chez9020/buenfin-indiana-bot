@@ -1,0 +1,45 @@
+<p class="status">Actualizado: {{ hora_actual }} UTC</p>
+
+<table>
+  <thead>
+    <tr>
+      <th>#</th>
+      <th>Nombre</th>
+      <th>Teléfono</th>
+      <th>Tienda</th>
+      <th>Monto OCR</th>
+      <th>Cantidad Detectada</th>
+      <th>Premio</th>
+      <th>TICKET</th>
+      <th>Acciones</th>
+    </tr>
+  </thead>
+  <tbody>
+    {% for t in tickets %}
+    <tr>
+      <td>{{ loop.index }}</td>
+      <td>{{ t.timestamp }}</td>
+      <td>{{ t.nombre }}</td>
+      <td>{{ t.telefono }}</td>
+      <td>{{ t.tienda }}</td>
+      <td>${{ t.monto_ocr }}</td>
+      <td>
+        <input type="number" id="cantidad_{{ loop.index }}" value="{{ t.cantidad_detectada or t.monto_ocr }}" step="0.01">
+      </td>
+      <td>{{ t.premio or "Pendiente" }}</td>
+      <td>
+        {% if t.ticket %}
+          <a href="{{ t.ticket }}" target="_blank">Ver ticket</a>
+        {% else %}
+          <span class="text-muted">Sin enlace</span>
+        {% endif %}
+      </td>
+      <td>
+        <button class="btn-asignar" onclick="asignarPremio('{{ t.telefono }}', {{ loop.index }}, this)">
+          🎁 Asignar premio
+        </button>
+      </td>
+    </tr>
+    {% endfor %}
+  </tbody>
+</table>
