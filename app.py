@@ -21,6 +21,7 @@ app.wsgi_app = ProxyFix(app.wsgi_app, x_for=1, x_proto=1, x_host=1, x_prefix=1)
 token_facebook       = os.getenv("WHATSAPP_TOKEN")
 id_numero            = os.getenv("WHATSAPP_NUMBER_ID")
 WEBHOOK_VERIFY_TOKEN = os.getenv("WEBHOOK_VERIFY_TOKEN")
+URL_SERVER           = os.getenv("URL_SERVER")
 
 # Ajustes Dashboard
 AUTO_SYNC_ON_DASHBOARD = os.getenv("AUTO_SYNC_ON_DASHBOARD", "1") == "1"
@@ -532,7 +533,7 @@ def webhook():
                 "monto": monto_ticket,
                 "motivo": motivo_ocr,
                 "vendedor": usuario["respuestas"].get("vendedor", "Sin vendedor"),
-                "nombre_archivo": f"https://seal-sweet-lamb.ngrok-free.app/catalogo_img/{path_ticket}" if path_ticket else "",
+                "nombre_archivo": f"{URL_SERVER}/catalogo_img/{path_ticket}" if path_ticket else "",
                 "premio": nuevo_ticket.get("premio", "")
             }
 
