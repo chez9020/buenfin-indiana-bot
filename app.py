@@ -610,9 +610,9 @@ def asignar_premio():
     ws = open_worksheet()
     rows = ws.get_all_values()
     headers = [h.strip().lower() for h in rows[0]]
-
     idx_tel = headers.index("telefono")
     idx_premio = headers.index("premio")
+    idx_nombre = headers.index("nombre")
     idx_cantidad = headers.index("cantidad detectada") if "cantidad detectada" in headers else None
 
     actualizado = False
@@ -623,6 +623,7 @@ def asignar_premio():
             valor_actual = row[idx_premio].strip().lower()
             # Solo reemplazar si está "pendiente" o "revisión manual"
             if valor_actual in ("pendiente de validación", "revisión manual", "pendiente"):
+                nombre = row[idx_nombre].strip()  # 👈 aquí obtienes el nombre
                 ws.update_cell(i, idx_premio + 1, premio)
                 if idx_cantidad:
                     ws.update_cell(i, idx_cantidad + 1, cantidad_detectada)
@@ -633,7 +634,21 @@ def asignar_premio():
         return jsonify({"error": "No se encontró registro pendiente para ese número"}), 404
 
     # Enviar mensaje al WhatsApp
-    msg = f"🎉 ¡Felicidades! Has ganado *{premio}* por tu compra de ${cantidad_detectada:,.2f} en el Buen Fin Indiana ⚡"
+    msg = f"""
+    🎉 ¡Felicidades, {nombre}!  
+
+    Tu participación en *El Buen Fin Indiana* ha sido validada con éxito ✅  
+    Has ganado un *{premio}* 🏆  
+
+    Nuestro equipo se pondrá en contacto contigo para coordinar la entrega.  
+    Mantente pendiente de tu WhatsApp 📱  
+    Recuerda que entre más compres, ¡mayor puede ser tu recompensa! ⚡  
+
+    🔗 Si deseas conocer más sobre los niveles de premios, visita:  
+    👉 www.buenfinindiana.com/bases  
+
+    ¡Gracias por participar!
+    """
     wsend(telefono, msg)
 
     return jsonify({
