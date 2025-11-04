@@ -635,18 +635,18 @@ def asignar_premio():
 
     # Enviar mensaje al WhatsApp
     msg = f"""
-    🎉 ¡Felicidades, {nombre}!  
+    🎉 ¡Felicidades, {nombre}!
 
     Tu participación en *El Buen Fin Indiana* ha sido validada con éxito ✅  
-    Has ganado un *{premio}* 🏆  
-
-    Nuestro equipo se pondrá en contacto contigo para coordinar la entrega.  
-    Mantente pendiente de tu WhatsApp 📱  
+    Has ganado un *{premio}* 🏆
+    
+    Nuestro equipo se pondrá en contacto contigo para coordinar la entrega.
+    Mantente pendiente de tu WhatsApp 📱
     Recuerda que entre más compres, ¡mayor puede ser tu recompensa! ⚡  
 
-    🔗 Si deseas conocer más sobre los niveles de premios, visita:  
-    👉 www.buenfinindiana.com/bases  
-
+    🔗 Si deseas conocer más sobre los niveles de premios, visita:
+    👉 www.buenfinindiana.com/bases
+    
     ¡Gracias por participar!
     """
     wsend(telefono, msg)

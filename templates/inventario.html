@@ -1,0 +1,288 @@
+<!DOCTYPE html>
+<html lang="es">
+<head>
+  <meta charset="utf-8" />
+  <meta name="viewport" content="width=device-width,initial-scale=1" />
+  <title>Inventario de Premios</title>
+
+  <link href="https://cdn.jsdelivr.net/npm/bootstrap@5.3.3/dist/css/bootstrap.min.css" rel="stylesheet" />
+  <link href="https://cdn.jsdelivr.net/npm/bootstrap-icons@1.11.3/font/bootstrap-icons.css" rel="stylesheet"/>
+  <script src="https://cdn.jsdelivr.net/npm/chart.js@4.4.1"></script>
+
+  <style>
+    body { background: #f5f7fb; }
+    .brand { font-weight: 700; letter-spacing: .2px; }
+    .card { border: none; box-shadow: 0 6px 18px rgba(28,28,28,.06); }
+    .badge-stock { font-size: .75rem; }
+    .table thead th { color: #667085; font-weight: 600; text-transform: uppercase; font-size: .8rem; }
+    .search-input { max-width: 360px; }
+    .muted { color: #6c757d; }
+    .footer-note { font-size: .85rem; color: #98a2b3; }
+  </style>
+</head>
+<body>
+
+<nav class="navbar navbar-expand-lg bg-white border-bottom">
+  <div class="container">
+    <span class="navbar-brand brand">
+      <i class="bi bi-box-seam"></i> Inventario de Premios · Indiana
+    </span>
+    <div class="ms-auto d-flex gap-2">
+      <a href="/inventario.json" class="btn btn-outline-secondary btn-sm" target="_blank">
+        <i class="bi bi-code-slash"></i> API JSON
+      </a>
+      <button id="btnExport" class="btn btn-primary btn-sm">
+        <i class="bi bi-download"></i> Exportar CSV
+      </button>
+    </div>
+  </div>
+</nav>
+
+<main class="container my-4">
+  <div class="row g-3 mb-3">
+    <div class="col-md-3">
+      <div class="card p-3">
+        <div class="d-flex align-items-center justify-content-between">
+          <div>
+            <div class="text-uppercase text-muted small">Total de premios</div>
+            <div class="fs-3 fw-bold">{{ total_items }}</div>
+          </div>
+          <i class="bi bi-gift-fill fs-1 text-primary"></i>
+        </div>
+      </div>
+    </div>
+    <div class="col-md-3">
+      <div class="card p-3">
+        <div class="d-flex align-items-center justify-content-between">
+          <div>
+            <div class="text-uppercase text-muted small">Totales (capacidad)</div>
+            <div class="fs-3 fw-bold">{{ total_totales }}</div>
+          </div>
+          <i class="bi bi-stack fs-1 text-secondary"></i>
+        </div>
+      </div>
+    </div>
+    <div class="col-md-3">
+      <div class="card p-3">
+        <div class="d-flex align-items-center justify-content-between">
+          <div>
+            <div class="text-uppercase text-muted small">Premios asignados</div>
+            <div class="fs-3 fw-bold">{{ total_asignados }}</div>
+          </div>
+          <i class="bi bi-ticket-perforated-fill fs-1 text-danger"></i>
+        </div>
+      </div>
+    </div>
+    <div class="col-md-3">
+      <div class="card p-3">
+        <div class="d-flex align-items-center justify-content-between">
+          <div>
+            <div class="text-uppercase text-muted small">Unidades disponibles</div>
+            <div class="fs-3 fw-bold">{{ total_disponibles }}</div>
+          </div>
+          <i class="bi bi-box2-heart fs-1 text-success"></i>
+        </div>
+      </div>
+    </div>
+    <div class="col-md-3">
+      <div class="card p-3">
+        <div class="d-flex align-items-center justify-content-between">
+          <div>
+            <div class="text-uppercase text-muted small">Total de compras (Sheets)</div>
+            <div class="fs-3 fw-bold" id="totalMontoSheets">—</div>
+          </div>
+          <i class="bi bi-cash-coin fs-1 text-info"></i>
+        </div>
+      </div>
+    </div>
+  </div>
+
+  <div class="card p-3 mb-3">
+    <div class="d-flex flex-wrap gap-2 align-items-center">
+      <div class="input-group search-input">
+        <span class="input-group-text bg-white"><i class="bi bi-search"></i></span>
+        <input id="search" class="form-control" placeholder="Buscar premio…" />
+      </div>
+      <div class="ms-auto small muted">
+        <span class="me-3"><span class="badge bg-success-subtle text-success">Alto</span> &ge; 20</span>
+        <span class="me-3"><span class="badge bg-warning-subtle text-warning">Medio</span> 6–19</span>
+        <span><span class="badge bg-danger-subtle text-danger">Bajo</span> &le; {{ low_threshold }}</span>
+      </div>
+    </div>
+  </div>
+
+  <div class="row g-3">
+    <div class="col-lg-8">
+      <div class="card p-0">
+        <div class="table-responsive">
+          <table id="tbl" class="table align-middle mb-0">
+            <thead class="bg-light">
+              <tr>
+                <th>Premio</th>
+                <th class="text-center">Totales</th>
+                <th class="text-center">Asignados</th>
+                <th class="text-center">Disponibles</th>
+              </tr>
+            </thead>
+            <tbody>
+              {% for it in items %}
+              {% set qty = it.disponibles %}
+              {% set badge_class = 'bg-success-subtle text-success' %}
+              {% if qty <= low_threshold %}
+                {% set badge_class = 'bg-danger-subtle text-danger' %}
+              {% elif qty < 20 %}
+                {% set badge_class = 'bg-warning-subtle text-warning' %}
+              {% endif %}
+              <tr>
+                <td class="fw-semibold">{{ it.nombre }}</td>
+                <td class="text-center">
+                  <span class="badge bg-secondary-subtle text-secondary badge-stock px-3 py-2">{{ it.totales }}</span>
+                </td>
+                <td class="text-center">
+                  <span class="badge bg-info-subtle text-info badge-stock px-3 py-2">{{ it.asignados }}</span>
+                </td>
+                <td class="text-center">
+                  <span class="badge {{ badge_class }} badge-stock px-3 py-2">{{ it.disponibles }}</span>
+                </td>
+              </tr>
+              {% endfor %}
+              {% if items|length == 0 %}
+              <tr><td colspan="4" class="text-center text-muted py-4">No hay premios en inventario.</td></tr>
+              {% endif %}
+            </tbody>
+          </table>
+        </div>
+      </div>
+      <div class="mt-2 footer-note">
+        Totales desde configuración fija · Asignados desde Sheets · Disponibles = Totales − Asignados ·
+        <a href="/inventario.json" target="_blank">/inventario.json</a>
+      </div>
+    </div>
+
+    <div class="col-lg-4">
+      <div class="card p-3">
+        <h6 class="mb-3">Distribución de disponibles</h6>
+        <canvas id="chart" height="240"></canvas>
+        <div class="small muted mt-2">
+          Muestra los 6 premios con más unidades disponibles; el resto se agrupa como “Otros”.
+        </div>
+      </div>
+    </div>
+    <div class="card p-3 mt-3">
+      <h6 class="mb-1">Top tiendas por registros</h6>
+      <div class="small muted mb-2">Basado en la columna “Tienda” de Google Sheets.</div>
+
+      <div class="d-flex justify-content-between align-items-center border rounded p-2 mb-3 bg-light">
+        <div class="small text-muted">Tienda líder</div>
+        <div class="text-end">
+          <div id="topTiendaNombre" class="fw-semibold">—</div>
+          <div class="small text-muted"><span id="topTiendaCount">0</span> registros</div>
+        </div>
+      </div>
+
+      <canvas id="chartTiendas" height="260"></canvas>
+    </div>
+  </div>
+</main>
+
+<script>
+  // Búsqueda en vivo
+  const search = document.getElementById('search');
+  const rows = () => Array.from(document.querySelectorAll('#tbl tbody tr'));
+  search.addEventListener('input', () => {
+    const q = search.value.toLowerCase().trim();
+    rows().forEach(tr => {
+      const text = tr.children[0].innerText.toLowerCase();
+      tr.style.display = text.includes(q) ? '' : 'none';
+    });
+  });
+
+  // Exportar CSV
+  document.getElementById('btnExport').addEventListener('click', () => {
+    const headers = ['Premio','Totales','Asignados','Disponibles'];
+    const data = rows()
+      .filter(tr => tr.style.display !== 'none')
+      .map(tr => {
+        const premio = tr.children[0].innerText.replace(/\s+/g, ' ').trim();
+        const tot    = tr.children[1].innerText.trim();
+        const asig   = tr.children[2].innerText.trim();
+        const disp   = tr.children[3].innerText.trim();
+        return [premio, tot, asig, disp];
+      });
+    const csv = [headers, ...data].map(r => r.map(v => `"${(v||'').replace(/"/g,'""')}"`).join(',')).join('\n');
+    const blob = new Blob([csv], {type: 'text/csv;charset=utf-8'});
+    const url = URL.createObjectURL(blob);
+    const a = Object.assign(document.createElement('a'), {href: url, download: 'inventario_premios.csv'});
+    a.click(); URL.revokeObjectURL(url);
+  });
+
+  // Chart: usa Disponibles (columna 4)
+  (function renderChart(){
+    const data = rows().map(tr => ({
+      name: tr.children[0].innerText.trim(),
+      qty: Number(tr.children[3].innerText.trim())
+    }));
+    data.sort((a,b)=>b.qty-a.qty);
+    const top = data.slice(0,6);
+    const otros = data.slice(6).reduce((s,i)=>s+i.qty,0);
+    const labels = top.map(i=>i.name).concat(otros>0?['Otros']:[]);
+    const qtys = top.map(i=>i.qty).concat(otros>0?[otros]:[]);
+
+    const ctx = document.getElementById('chart').getContext('2d');
+    new Chart(ctx, {
+      type: 'doughnut',
+      data: { labels, datasets: [{ data: qtys }] },
+      options: { responsive: true, plugins: { legend: { position: 'bottom' }, tooltip: { callbacks: { label: (c)=> `${c.label}: ${c.parsed}` } } }, cutout: '60%' }
+    });
+  })();
+
+  // Total de compras (Sheets) (si ya tienes este endpoint)
+  fetch('{{ url_for("total_monto") }}', { credentials: 'same-origin' })
+    .then(r => r.json())
+    .then(({ total }) => {
+      document.getElementById('totalMontoSheets').textContent =
+        new Intl.NumberFormat('es-MX', { style: 'currency', currency: 'MXN' })
+        .format(total || 0);
+    })
+    .catch((e) => {
+      console.error('total-monto error:', e);
+      document.getElementById('totalMontoSheets').textContent = '—';
+    });
+  // 🔹 Cargar y graficar Top Tiendas
+  fetch('{{ url_for("top_tiendas") }}?limit=8', { credentials: 'same-origin' })
+    .then(r => r.json())
+    .then(({ items }) => {
+      const labels = items.map(i => i.tienda);
+      const counts = items.map(i => i.registros);
+
+      // Rellenar "Tienda líder"
+      if (items.length > 0) {
+        document.getElementById('topTiendaNombre').textContent = items[0].tienda;
+        document.getElementById('topTiendaCount').textContent = items[0].registros;
+      }
+
+      // Gráfica de barras horizontal
+      const ctx2 = document.getElementById('chartTiendas').getContext('2d');
+      new Chart(ctx2, {
+        type: 'bar',
+        data: { labels, datasets: [{ data: counts }] },
+        options: {
+          responsive: true,
+          indexAxis: 'y',
+          plugins: {
+            legend: { display: false },
+            tooltip: { callbacks: { label: (c) => `${c.parsed.x} registros` } }
+          },
+          scales: {
+            x: { beginAtZero: true, ticks: { precision: 0 } }
+          }
+        }
+      });
+    })
+    .catch(e => {
+      console.error('top-tiendas error:', e);
+    });
+</script>
+
+</body>
+</html>
