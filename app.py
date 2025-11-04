@@ -746,7 +746,7 @@ def inventario_html():
         last_ts = int(r.get("premio_sync:last_ts") or 0)
     except Exception:
         last_ts = 0
-    last_sync_dt = datetime.datetime.fromtimestamp(last_ts) if last_ts else None
+    last_sync_dt = datetime.fromtimestamp(last_ts) if last_ts else None
 
     return render_template(
         "inventario.html",
