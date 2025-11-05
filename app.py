@@ -805,6 +805,47 @@ def top_tiendas():
         "items": [{"tienda": n, "registros": c} for n, c in top]
     }), 200
 
+@app.get("/sheets/top-vendedores")
+def top_vendedores():
+    """
+    Devuelve los vendedores con más registros, basado en la columna 'Vendedor' del Sheet.
+    """
+    try:
+        limit = int(request.args.get("limit", 8))
+    except Exception:
+        limit = 8
+
+    ws = open_worksheet()
+    rows = ws.get_all_values() or []
+    if not rows:
+        return jsonify({"total_vendedores": 0, "total_registros": 0, "items": []}), 200
+
+    headers = [h.strip().lower() for h in rows[0]]
+    if "vendedor" not in headers:
+        return jsonify({"error": "Columna 'Vendedor' no encontrada"}), 400
+
+    idx_vendedor = headers.index("vendedor")
+
+    counts = {}
+    total = 0
+    for row in rows[1:]:
+        if idx_vendedor < len(row):
+            vendedor = (row[idx_vendedor] or "").strip()
+            if not vendedor:
+                continue
+            vendedor_norm = " ".join(vendedor.split())
+            counts[vendedor_norm] = counts.get(vendedor_norm, 0) + 1
+            total += 1
+
+    ordenadas = sorted(counts.items(), key=lambda x: x[1], reverse=True)
+    top = ordenadas[:max(0, limit)]
+
+    return jsonify({
+        "total_vendedores": len(counts),
+        "total_registros": total,
+        "items": [{"vendedor": n, "registros": c} for n, c in top]
+    }), 200
+
 # ------------------ Raíz ------------------
 @app.route("/")
 def index():

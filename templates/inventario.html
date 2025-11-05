@@ -181,6 +181,19 @@
       </div>
 
       <canvas id="chartTiendas" height="260"></canvas>
+      <div class="card p-3 mt-3">
+        <h6 class="mb-1">Top vendedores por registros</h6>
+        <div class="small muted mb-2">Basado en la columna “Vendedor” de Google Sheets.</div>
+
+        <div class="d-flex justify-content-between align-items-center border rounded p-2 mb-3 bg-light">
+            <div class="small text-muted">Vendedor líder</div>
+            <div class="text-end">
+            <div id="topVendedorNombre" class="fw-semibold">—</div>
+            <div class="small text-muted"><span id="topVendedorCount">0</span> registros</div>
+            </div>
+        </div>
+        <canvas id="chartVendedores" height="260"></canvas>
+        </div>
     </div>
   </div>
 </main>
@@ -282,6 +295,42 @@
     .catch(e => {
       console.error('top-tiendas error:', e);
     });
+    
+    // 🔹 Cargar y graficar Top Vendedores
+    fetch('{{ url_for("top_vendedores") }}?limit=8', { credentials: 'same-origin' })
+    .then(r => r.json())
+    .then(({ items }) => {
+        const labels = items.map(i => i.vendedor);
+        const counts = items.map(i => i.registros);
+
+        // Rellenar "Vendedor líder"
+        if (items.length > 0) {
+        document.getElementById('topVendedorNombre').textContent = items[0].vendedor;
+        document.getElementById('topVendedorCount').textContent = items[0].registros;
+        }
+
+        // Gráfica de barras horizontal
+        const ctx3 = document.getElementById('chartVendedores').getContext('2d');
+        new Chart(ctx3, {
+        type: 'bar',
+        data: { labels, datasets: [{ data: counts }] },
+        options: {
+            responsive: true,
+            indexAxis: 'y',
+            plugins: {
+            legend: { display: false },
+            tooltip: { callbacks: { label: (c) => `${c.parsed.x} registros` } }
+            },
+            scales: {
+            x: { beginAtZero: true, ticks: { precision: 0 } }
+            }
+        }
+        });
+    })
+    .catch(e => {
+        console.error('top-vendedores error:', e);
+    });
+
 </script>
 
 </body>
