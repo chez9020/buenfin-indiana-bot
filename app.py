@@ -9,6 +9,7 @@ from ticket_validator import validar_ticket_desde_media
 from sheets_logger import registrar_ticket_en_sheets
 from sheets_utils import open_worksheet, parse_money
 from control_inventario import obtener_premio_disponible, obtener_premio_especial
+from vendedores import VENDEDORES
 
 # ------------------ Config básica ------------------
 load_dotenv()
@@ -49,8 +50,10 @@ def qr_redirect():
     telefono_bot = "5217206266927"
 
     # Mensaje limpio y estándar → el regex lo detectará sin fallos
-    mensaje = f"Hola, quiero participar. Codigo {vendedor_id}"
-    wa_link = f"https://wa.me/{telefono_bot}?text={mensaje}"
+    if vendedor_id:
+        vendedor_nombre = VENDEDORES.get(vendedor_id)
+        mensaje = f"Hola, quiero participar. Codigo {vendedor_nombre}"
+        wa_link = f"https://wa.me/{telefono_bot}?text={mensaje}"
 
     print(f"🔗 QR generado: {wa_link}")
     return redirect(wa_link)
@@ -326,8 +329,14 @@ def webhook():
             match = re.search(r"\bV\d{1,4}\b", texto.upper())
             vendedor_id = match.group(0) if match else None
 
+            # Obtener nombre real del vendedor
+            if vendedor_id:
+                vendedor_nombre = VENDEDORES.get(vendedor_id, f"Vendedor {vendedor_id}")
+            else:
+                vendedor_nombre = "Sin vendedor"
+
             # Guarda en sesión
-            usuario["respuestas"]["vendedor"] = vendedor_id or "Sin vendedor"
+            usuario["respuestas"]["vendedor"] = vendedor_nombre or "Sin vendedor"
             guardar_sesion(telefono, usuario)
 
             dbg(f"🧾 Vendedor detectado para {telefono}: {vendedor_id or 'Sin vendedor'}")
