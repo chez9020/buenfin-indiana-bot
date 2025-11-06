@@ -43,28 +43,25 @@ def qr_redirect():
     if not vendedor_id:
         return "❌ Falta el parámetro vendedor", 400
 
-    # contador opcional
+    # Registrar conteo de escaneos (igual que antes)
     r.incr(f"vendedor:{vendedor_id}:scans")
     r.expire(f"vendedor:{vendedor_id}:scans", 86400)
 
-    # token único (UUID) y codificado en base64 (sin padding para ahorrar caracteres)
-    token = str(uuid.uuid4())
-    b64 = base64.urlsafe_b64encode(token.encode()).decode().rstrip("=")
-
-    # guardar token -> vendedor_id en Redis (expira en 1h)
-    r.set(f"qr_session:{b64}", vendedor_id, ex=3600)
-
-    # usar un separador invisible más fiable: U+2063 (INVISIBLE SEPARATOR)
-    INVISIBLE = "\u2063"
-
+    # Obtener nombre real
     vendedor_nombre = VENDEDORES.get(vendedor_id, "Sin vendedor")
-    # El texto visible será solo el nombre + texto; el token queda al final envuelto por el separador
-    mensaje = f"Hola, {vendedor_nombre} quiero participar{INVISIBLE}{b64}{INVISIBLE}"
+
+    # 1️⃣ GUARDAR EL VENDEDOR POR IP (método limpio)
+    ip = request.remote_addr
+    r.set(f"qr_scan_ip:{ip}", vendedor_id, ex=180)  # 3 min de vida
+
+    # 2️⃣ Mensaje visible — limpio, sin ID, sin tokens
+    mensaje = f"Hola, {vendedor_nombre} quiero participar"
 
     telefono_bot = "5217206266927"
     wa_link = f"https://wa.me/{telefono_bot}?text={mensaje}"
 
-    print(f"🔗 QR generado → vendedor:{vendedor_id} token:{b64}")
+    print(f"🔗 QR escaneado desde IP {ip} → vendedor {vendedor_id}")
+
     return redirect(wa_link)
 
 def wsend(to, text):
@@ -330,35 +327,21 @@ def webhook():
         if "QUIERO PARTICIPAR" in texto.upper():
             usuario = {"paso": 0, "respuestas": {}, "tickets": []}
 
-            import re, base64
+            # ✅ Obtener vendedor por IP
+            ip = request.remote_addr
+            vendedor_id = r.get(f"qr_scan_ip:{ip}")
 
-            # buscar token base64 de UUID (ej: grupos de letras/dígitos con guiones si recuperas uuid antes)
-            m = re.search(r"([A-Za-z0-9_\-]{20,})", texto)  # ajusta longitud mínima si quieres más seguridad
-            token_b64 = m.group(1) if m else None
-
-            vendedor_nombre = None
-            if token_b64:
-                try:
-                    vendedor_id = r.get(f"qr_session:{token_b64}")
-                    if vendedor_id:
-                        vendedor_nombre = VENDEDORES.get(vendedor_id, vendedor_id)
-                        # opcional: eliminar la llave para que no se reutilice
-                        r.delete(f"qr_session:{token_b64}")
-                except Exception as e:
-                    dbg("redis error al recuperar qr_session:", e)
-
-            # Si detectaste vendedor_nombre lo guardas en la sesión del teléfono
-            if not usuario:
-                usuario = {"paso": 0, "respuestas": {}, "tickets": []}
-
-            if vendedor_nombre:
-                usuario["respuestas"]["vendedor"] = vendedor_nombre
+            if vendedor_id:
+                vendedor_nombre = VENDEDORES.get(vendedor_id, vendedor_id)
             else:
-                usuario.setdefault("respuestas", {})["vendedor"] = "Sin vendedor"
+                vendedor_nombre = "Sin vendedor"
+
+            # Guardar en la sesión del usuario
+            usuario["respuestas"]["vendedor"] = vendedor_nombre
 
             guardar_sesion(telefono, usuario)
 
-            dbg(f"🧾 Vendedor detectado para {telefono}: {vendedor_id or 'Sin vendedor'}")
+            print(f"✅ Vendedor detectado vía IP {ip}: {vendedor_nombre}")
 
             # Mensajes de bienvenida
             wsend(telefono, "👋 ¡Hola! Bienvenido al *Buen Fin Indiana* ⚡")
