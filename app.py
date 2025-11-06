@@ -48,12 +48,11 @@ def qr_redirect():
 
     # Teléfono del bot (ajusta este número)
     telefono_bot = "5217206266927"
-
+    INVISIBLE = "\u3164"
     # Mensaje limpio y estándar → el regex lo detectará sin fallos
-    if vendedor_id:
-        vendedor_nombre = VENDEDORES.get(vendedor_id)
-        mensaje = f"Hola, {vendedor_nombre} quiero participar"
-        wa_link = f"https://wa.me/{telefono_bot}?text={mensaje}"
+    vendedor_nombre = VENDEDORES.get(vendedor_id)
+    mensaje = f"Hola, {vendedor_nombre} quiero participar {INVISIBLE}{vendedor_id}"
+    wa_link = f"https://wa.me/{telefono_bot}?text={mensaje}"
 
     print(f"🔗 QR generado: {wa_link}")
     return redirect(wa_link)
