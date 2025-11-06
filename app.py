@@ -785,7 +785,7 @@ def total_monto():
             return jsonify({"total": 0.0})
 
         headers = [h.strip().lower() for h in rows[0]]
-        posibles = ("monto", "total", "importe")
+        posibles = ("monto", "total", "importe", "cantidad detectada")
         idx = None
         for i, h in enumerate(headers):
             if any(p == h for p in posibles):
