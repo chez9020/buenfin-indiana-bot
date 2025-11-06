@@ -451,6 +451,7 @@ def webhook():
                                 {"type": "reply", "reply": {"id": "1", "title": "Radio"}},
                                 {"type": "reply", "reply": {"id": "2", "title": "⁠Cartel publicitario"}},
                                 {"type": "reply", "reply": {"id": "3", "title": "⁠En tienda"}},
+                                {"type": "reply", "reply": {"id": "4", "title": "⁠Redes sociales"}}
                             ]
                         },
                     },
@@ -644,7 +645,7 @@ def asignar_premio():
     Mantente pendiente de tu WhatsApp 📱
     Recuerda que entre más compres, ¡mayor puede ser tu recompensa! ⚡  
 
-    🔗 Si deseas conocer más sobre los niveles de premios, visita:
+    🔗 Si deseas conocer más sobre la dinámica, visita:
     👉 www.buenfinindiana.com/bases
     
     ¡Gracias por participar!
