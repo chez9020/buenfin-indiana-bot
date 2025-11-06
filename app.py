@@ -10,6 +10,8 @@ from sheets_logger import registrar_ticket_en_sheets
 from sheets_utils import open_worksheet, parse_money
 from control_inventario import obtener_premio_disponible, obtener_premio_especial
 from vendedores import VENDEDORES
+import uuid
+import base64
 
 # ------------------ Config básica ------------------
 load_dotenv()
@@ -27,7 +29,7 @@ URL_SERVER           = os.getenv("URL_SERVER")
 # Ajustes Dashboard
 AUTO_SYNC_ON_DASHBOARD = os.getenv("AUTO_SYNC_ON_DASHBOARD", "1") == "1"
 AUTO_SYNC_MAX_AGE_S    = int(os.getenv("AUTO_SYNC_MAX_AGE_S", "3600"))  # 1h por defecto
-
+r = redis.Redis(host='localhost', port=6379, decode_responses=True)
 # WhatsApp
 wa = WhatsApp(token_facebook, id_numero)
 
@@ -37,24 +39,32 @@ def dbg(*args):
 
 @app.route("/qr")
 def qr_redirect():
-    """Redirige a WhatsApp e identifica al vendedor"""
     vendedor_id = request.args.get("vendedor")
     if not vendedor_id:
         return "❌ Falta el parámetro vendedor", 400
 
-    # (Opcional) Registrar el escaneo en Redis con conteo
+    # contador opcional
     r.incr(f"vendedor:{vendedor_id}:scans")
-    r.expire(f"vendedor:{vendedor_id}:scans", 86400)  # Expira en 1 día
+    r.expire(f"vendedor:{vendedor_id}:scans", 86400)
 
-    # Teléfono del bot (ajusta este número)
+    # token único (UUID) y codificado en base64 (sin padding para ahorrar caracteres)
+    token = str(uuid.uuid4())
+    b64 = base64.urlsafe_b64encode(token.encode()).decode().rstrip("=")
+
+    # guardar token -> vendedor_id en Redis (expira en 1h)
+    r.set(f"qr_session:{b64}", vendedor_id, ex=3600)
+
+    # usar un separador invisible más fiable: U+2063 (INVISIBLE SEPARATOR)
+    INVISIBLE = "\u2063"
+
+    vendedor_nombre = VENDEDORES.get(vendedor_id, "Sin vendedor")
+    # El texto visible será solo el nombre + texto; el token queda al final envuelto por el separador
+    mensaje = f"Hola, {vendedor_nombre} quiero participar{INVISIBLE}{b64}{INVISIBLE}"
+
     telefono_bot = "5217206266927"
-    INVISIBLE = "\u3164"
-    # Mensaje limpio y estándar → el regex lo detectará sin fallos
-    vendedor_nombre = VENDEDORES.get(vendedor_id)
-    mensaje = f"Hola, {vendedor_nombre} quiero participar {INVISIBLE}{vendedor_id}"
     wa_link = f"https://wa.me/{telefono_bot}?text={mensaje}"
 
-    print(f"🔗 QR generado: {wa_link}")
+    print(f"🔗 QR generado → vendedor:{vendedor_id} token:{b64}")
     return redirect(wa_link)
 
 def wsend(to, text):
@@ -65,9 +75,6 @@ def wsend(to, text):
     except Exception as e:
         dbg("❌ Error send_message:", e)
         return None
-
-# Redis
-r = redis.Redis(host='localhost', port=6379, decode_responses=True)
 
 # ------------------ Sesiones ------------------
 def cargar_sesion(telefono):
@@ -323,19 +330,32 @@ def webhook():
         if "QUIERO PARTICIPAR" in texto.upper():
             usuario = {"paso": 0, "respuestas": {}, "tickets": []}
 
-            # Buscar código del vendedor (como V001, V002...) en cualquier parte del texto
-            import re
-            match = re.search(r"\bV\d{1,4}\b", texto.upper())
-            vendedor_id = match.group(0) if match else None
+            import re, base64
 
-            # Obtener nombre real del vendedor
-            if vendedor_id:
-                vendedor_nombre = VENDEDORES.get(vendedor_id, f"Vendedor {vendedor_id}")
+            # buscar token base64 de UUID (ej: grupos de letras/dígitos con guiones si recuperas uuid antes)
+            m = re.search(r"([A-Za-z0-9_\-]{20,})", texto)  # ajusta longitud mínima si quieres más seguridad
+            token_b64 = m.group(1) if m else None
+
+            vendedor_nombre = None
+            if token_b64:
+                try:
+                    vendedor_id = r.get(f"qr_session:{token_b64}")
+                    if vendedor_id:
+                        vendedor_nombre = VENDEDORES.get(vendedor_id, vendedor_id)
+                        # opcional: eliminar la llave para que no se reutilice
+                        r.delete(f"qr_session:{token_b64}")
+                except Exception as e:
+                    dbg("redis error al recuperar qr_session:", e)
+
+            # Si detectaste vendedor_nombre lo guardas en la sesión del teléfono
+            if not usuario:
+                usuario = {"paso": 0, "respuestas": {}, "tickets": []}
+
+            if vendedor_nombre:
+                usuario["respuestas"]["vendedor"] = vendedor_nombre
             else:
-                vendedor_nombre = "Sin vendedor"
+                usuario.setdefault("respuestas", {})["vendedor"] = "Sin vendedor"
 
-            # Guarda en sesión
-            usuario["respuestas"]["vendedor"] = vendedor_nombre or "Sin vendedor"
             guardar_sesion(telefono, usuario)
 
             dbg(f"🧾 Vendedor detectado para {telefono}: {vendedor_id or 'Sin vendedor'}")
