@@ -52,7 +52,7 @@ def qr_redirect():
     # Mensaje limpio y estándar → el regex lo detectará sin fallos
     if vendedor_id:
         vendedor_nombre = VENDEDORES.get(vendedor_id)
-        mensaje = f"Hola, quiero participar. Codigo {vendedor_nombre}"
+        mensaje = f"Hola, {vendedor_nombre} quiero participar"
         wa_link = f"https://wa.me/{telefono_bot}?text={mensaje}"
 
     print(f"🔗 QR generado: {wa_link}")
