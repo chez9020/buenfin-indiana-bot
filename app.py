@@ -440,27 +440,40 @@ def webhook():
                 usuario["paso"] += 1
                 guardar_sesion(telefono, usuario)
 
-                # Botones: ¿Qué estamos festejando?
-                wa.send_reply_button(
-                    recipient_id=telefono,
-                    button={
-                        "type": "button",
-                        "body": {"text": "¿Por qué medio te enteraste de la promoción?"},
-                        "action": {
-                            "buttons": [
-                                {"type": "reply", "reply": {"id": "1", "title": "Radio"}},
-                                {"type": "reply", "reply": {"id": "2", "title": "⁠Cartel publicitario"}},
-                                {"type": "reply", "reply": {"id": "3", "title": "⁠En tienda"}},
-                                {"type": "reply", "reply": {"id": "4", "title": "⁠Redes sociales"}}
-                            ]
-                        },
-                    },
+                # Enviar mensaje con opciones numeradas (sin botones)
+                wsend(
+                    telefono,
+                    "📢 ¿Por qué medio te enteraste de la promoción?\n\n"
+                    "1️⃣ Radio\n"
+                    "2️⃣ Cartel publicitario\n"
+                    "3️⃣ En tienda\n"
+                    "4️⃣ Redes sociales\n\n"
+                    "Por favor, responde con el *número* de tu opción (1–4)."
                 )
-                return jsonify({"status": "medio ok"}), 200
+                return jsonify({"status": "pregunta medio enviada"}), 200
 
-            # 5) festejo (botón)
+            # 5) medio (validación numérica 1–4)
             if campo == "medio":
-                usuario["respuestas"]["medio"] = texto
+                # Validar número
+                if texto not in ("1", "2", "3", "4"):
+                    wsend(
+                        telefono,
+                        "❌ Opción no válida. Por favor responde con un número del *1 al 4*:\n\n"
+                        "1️⃣ Radio\n"
+                        "2️⃣ Cartel publicitario\n"
+                        "3️⃣ En tienda\n"
+                        "4️⃣ Redes sociales"
+                    )
+                    return jsonify({"status": "respuesta inválida (medio)"}), 200
+
+                opciones = {
+                    "1": "Radio",
+                    "2": "Cartel publicitario",
+                    "3": "En tienda",
+                    "4": "Redes sociales"
+                }
+
+                usuario["respuestas"]["medio"] = opciones[texto]
                 usuario["paso"] += 1
                 guardar_sesion(telefono, usuario)
 
@@ -472,7 +485,7 @@ def webhook():
                     "por *monto mayor a $6,000 + IVA*.\n"
                     "Las *cotizaciones no participan*."
                 )
-                return jsonify({"status": "festejo ok, pedir foto"}), 200
+                return jsonify({"status": "medio ok, pedir foto"}), 200
 
         # ---------------- F) Esperando FOTO (TOTAL_CAMPOS) ------------------
         if usuario and usuario.get("paso") == TOTAL_CAMPOS and tipo != "image":
