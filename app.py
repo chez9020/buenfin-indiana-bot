@@ -158,17 +158,17 @@ def contar_premios_asignados():
         return {}, 0
 
 DEFAULT_PREMIOS = {
-    "Boletos de cine tradicional": 470,
-    "Amazon $500": 60,
-    "Netflix $300": 120,
-    "Ubereats $150": 140,
-    "Uber $150": 140,
+    "Pelacables": 350,
+    "Amazon $5,000": 33,
+    "Tablet premium": 10,
+    "Smartphone": 25,
+    "Amazon $500": 400,
     'Pantalla 32"': 32,
-    "Portafolio Unisex para laptop": 65,
-    "Reloj Huawei": 50,
-    "Bocina Karaoke": 57,
+    "Electrodoméstico o Tarjeta Liverpool": 250,
+    "Motoneta": 2,
+    'Pantalla 40"': 30,
     "Alexa Echo": 66,
-    "Motocicleta eléctrica": 0,
+    "Amazon $2,000": 100,
 }
 
 def _union_premios(defaults: dict, asignados: dict):
@@ -538,7 +538,7 @@ def webhook():
                     "Será revisado manualmente por nuestro equipo."
                 )
                 nuevo_ticket["premio"] = "Revisión manual"
-            
+
             wsend(telefono, VALIDACION_MSG)
 
             # Datos para Sheets
@@ -603,7 +603,7 @@ def tickets_pendientes():
                 "premio": row_norm.get("premio", ""),
                 "ticket": row_norm.get("ticket", ""),
             })
-    
+
     hora_actual = datetime.utcnow().strftime("%d/%m/%Y %H:%M:%S")
     ano_actual = datetime.utcnow().year
     if request.args.get("ajax"):
@@ -658,14 +658,14 @@ def asignar_premio():
 
     Tu participación en *El Buen Fin Indiana* ha sido validada con éxito ✅  
     Has ganado un *{premio}* 🏆
-    
+
     Nuestro equipo se pondrá en contacto contigo para coordinar la entrega.
     Mantente pendiente de tu WhatsApp 📱
     Recuerda que entre más compres, ¡mayor puede ser tu recompensa! ⚡  
 
     🔗 Si deseas conocer más sobre la dinámica, visita:
     👉 www.buenfinindiana.com/bases
-    
+
     ¡Gracias por participar!
     """
     wsend(telefono, msg)
