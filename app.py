@@ -323,20 +323,19 @@ def webhook():
             usuario = {"paso": 0, "respuestas": {}, "tickets": []}
 
             import re
-            m = re.search(r"\bV\d{1,4}\b", texto.upper())
+            # Detectar directamente el código "VXXX" en el mensaje
+            m = re.search(r"\bV\d{3}\b", texto.upper())
+            vendedor_id = m.group(0) if m else None
 
-            if m:
-                vendedor_id = m.group(1)
-                vendedor_nombre = VENDEDORES.get(vendedor_id, "Sin vendedor")
+            if vendedor_id:
+                vendedor_nombre = VENDEDORES.get(vendedor_id, vendedor_id)
             else:
                 vendedor_nombre = "Sin vendedor"
 
-            # Guardar en la sesión del usuario
             usuario["respuestas"]["vendedor"] = vendedor_nombre
-
             guardar_sesion(telefono, usuario)
 
-            print(f"✅ Vendedor detectado vía IP {vendedor_nombre}")
+            dbg(f"🧾 Vendedor detectado para {telefono}: {vendedor_nombre}")
 
             # Mensajes de bienvenida
             wsend(telefono, "👋 ¡Hola! Bienvenido al *Buen Fin Indiana* ⚡")
