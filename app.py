@@ -51,8 +51,7 @@ def qr_redirect():
     telefono_bot = "5217206266927"
 
     mensaje = (
-        f"Hola, quiero participar con {vendedor_nombre}\n"
-        f"Con codigo {vendedor_id}"
+        f"Hola, quiero participar con {vendedor_nombre} con codigo {vendedor_id}"
     )
 
     wa_link = f"https://wa.me/{telefono_bot}?text={mensaje}"
@@ -324,7 +323,8 @@ def webhook():
             usuario = {"paso": 0, "respuestas": {}, "tickets": []}
 
             import re
-            m = re.search(r"codigo\s+(V\d{3})", texto, re.IGNORECASE)
+            m = re.search(r"\bV\d{1,4}\b", texto.upper())
+
             if m:
                 vendedor_id = m.group(1)
                 vendedor_nombre = VENDEDORES.get(vendedor_id, "Sin vendedor")
