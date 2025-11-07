@@ -36,32 +36,28 @@ wa = WhatsApp(token_facebook, id_numero)
 def dbg(*args):
     print(*args, file=sys.stdout, flush=True)
 
-
 @app.route("/qr")
 def qr_redirect():
     vendedor_id = request.args.get("vendedor")
     if not vendedor_id:
         return "❌ Falta el parámetro vendedor", 400
 
-    # Registrar conteo de escaneos (igual que antes)
+    # Registrar escaneo (opcional)
     r.incr(f"vendedor:{vendedor_id}:scans")
     r.expire(f"vendedor:{vendedor_id}:scans", 86400)
 
-    # Obtener nombre real
     vendedor_nombre = VENDEDORES.get(vendedor_id, "Sin vendedor")
 
-    # 1️⃣ GUARDAR EL VENDEDOR POR IP (método limpio)
-    ip = request.remote_addr
-    r.set(f"qr_scan_ip:{ip}", vendedor_id, ex=180)  # 3 min de vida
-
-    # 2️⃣ Mensaje visible — limpio, sin ID, sin tokens
-    mensaje = f"Hola, {vendedor_nombre} quiero participar"
-
     telefono_bot = "5217206266927"
+
+    mensaje = (
+        f"Hola, quiero participar con {vendedor_nombre}\n"
+        f"Con codigo {vendedor_id}"
+    )
+
     wa_link = f"https://wa.me/{telefono_bot}?text={mensaje}"
 
-    print(f"🔗 QR escaneado desde IP {ip} → vendedor {vendedor_id}")
-
+    print(f"🔗 QR generado → {wa_link}")
     return redirect(wa_link)
 
 def wsend(to, text):
@@ -327,12 +323,11 @@ def webhook():
         if "QUIERO PARTICIPAR" in texto.upper():
             usuario = {"paso": 0, "respuestas": {}, "tickets": []}
 
-            # ✅ Obtener vendedor por IP
-            ip = request.remote_addr
-            vendedor_id = r.get(f"qr_scan_ip:{ip}")
-
-            if vendedor_id:
-                vendedor_nombre = VENDEDORES.get(vendedor_id, vendedor_id)
+            import re
+            m = re.search(r"codigo\s+(V\d{3})", texto, re.IGNORECASE)
+            if m:
+                vendedor_id = m.group(1)
+                vendedor_nombre = VENDEDORES.get(vendedor_id, "Sin vendedor")
             else:
                 vendedor_nombre = "Sin vendedor"
 
@@ -341,7 +336,7 @@ def webhook():
 
             guardar_sesion(telefono, usuario)
 
-            print(f"✅ Vendedor detectado vía IP {ip}: {vendedor_nombre}")
+            print(f"✅ Vendedor detectado vía IP {vendedor_nombre}")
 
             # Mensajes de bienvenida
             wsend(telefono, "👋 ¡Hola! Bienvenido al *Buen Fin Indiana* ⚡")
