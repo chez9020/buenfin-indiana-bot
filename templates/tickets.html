@@ -177,8 +177,10 @@
       </td>
       <td>
         <button class="btn-asignar"
-        onclick="asignarPremio('{{ t.telefono }}', {{ t.row_index }}, {{ loop.index }}, this)">
-        🎁 Asignar premio
+                data-telefono="{{ t.telefono }}"
+                data-row-index="{{ t.row_index }}"
+                data-index="{{ loop.index }}">
+            🎁 Asignar premio
         </button>
       </td>
     </tr>
@@ -331,6 +333,15 @@ async function actualizarTabla() {
 }
 
 // Intervalo de actualización cada 15 segundos
-setInterval(actualizarTabla, 15000);
+setInterval(actualizarTabla, 600000);
+document.addEventListener("click", function (e) {
+    if (e.target && e.target.classList.contains("btn-asignar")) {
+        const btn = e.target;
+        const telefono = btn.dataset.telefono;
+        const rowIndex = btn.dataset.rowIndex;
+        const index = btn.dataset.index;
+        asignarPremio(telefono, rowIndex, index, btn);
+    }
+});
 </script>
 </html>
