@@ -585,13 +585,14 @@ def tickets_pendientes():
     rows = ws.get_all_records()
     pendientes = []
 
-    for r in rows:
+    for idx, r in enumerate(rows, start=2):
         # normalizamos encabezados
         row_norm = {k.strip().lower(): v for k, v in r.items()}
         premio = (row_norm.get("premio") or "").strip().lower()
 
         if premio in ("pendiente de validación", "revisión manual"):
             pendientes.append({
+                "row_index": idx,
                 "timestamp": row_norm.get("timestamp", ""),
                 "nombre": row_norm.get("nombre", ""),
                 "telefono": row_norm.get("telefono", ""),
@@ -614,57 +615,61 @@ def asignar_premio():
     data = request.get_json()
     telefono = str(data.get("telefono", "")).strip()
     cantidad_detectada = float(data.get("cantidad_detectada", 0))
+    row_index = int(data.get("row_index", 0))
 
     if not telefono:
         return jsonify({"error": "Falta el número de teléfono"}), 400
 
-    # Calcular premio según el monto detectado
+    # 1. Calcular premio según el monto detectado
     premio, tipo_premio = obtener_premio_especial(r, cantidad_detectada)
     if not premio:
         return jsonify({"error": "Sin premio disponible"}), 400
 
-    # Conexión a Google Sheets
+    # 2. Acceder a Google Sheets
     ws = open_worksheet()
     rows = ws.get_all_values()
     headers = [h.strip().lower() for h in rows[0]]
-    idx_tel = headers.index("telefono")
-    idx_premio = headers.index("premio")
-    idx_nombre = headers.index("nombre")
+
+    idx_tel      = headers.index("telefono")
+    idx_premio   = headers.index("premio")
+    idx_nombre   = headers.index("nombre")
     idx_cantidad = headers.index("cantidad detectada") if "cantidad detectada" in headers else None
 
-    actualizado = False
+    # Validar row_index
+    if row_index <= 1 or row_index > len(rows):
+        return jsonify({"error": "Índice de fila inválido"}), 400
 
-    # Buscar el registro con el teléfono correspondiente
-    for i, row in enumerate(rows[1:], start=2):
-        if row[idx_tel].strip() == telefono.strip():
-            valor_actual = row[idx_premio].strip().lower()
-            # Solo reemplazar si está "pendiente" o "revisión manual"
-            if valor_actual in ("pendiente de validación", "revisión manual", "pendiente"):
-                nombre = row[idx_nombre].strip()  # 👈 aquí obtienes el nombre
-                ws.update_cell(i, idx_premio + 1, premio)
-                if idx_cantidad:
-                    ws.update_cell(i, idx_cantidad + 1, cantidad_detectada)
-                actualizado = True
-                break
+    # 3. Verificar estado actual
+    valor_actual = rows[row_index - 1][idx_premio].strip().lower()
+    if valor_actual not in ("pendiente de validación", "revisión manual", "pendiente"):
+        return jsonify({"error": "La fila no está pendiente"}), 400
 
-    if not actualizado:
-        return jsonify({"error": "No se encontró registro pendiente para ese número"}), 404
+    # 4. Obtener nombre desde la fila
+    nombre = rows[row_index - 1][idx_nombre].strip()
 
-    # Enviar mensaje al WhatsApp
+    # 5. Actualizar premio
+    ws.update_cell(row_index, idx_premio + 1, premio)
+
+    # 6. Actualizar cantidad detectada si existe
+    if idx_cantidad is not None:
+        ws.update_cell(row_index, idx_cantidad + 1, cantidad_detectada)
+
+    # ✅ IMPORTANTE: marcar actualizado correctamente
+    actualizado = True
+
+    # 7. Enviar mensaje al WhatsApp
     msg = f"""
-    🎉 ¡Felicidades, {nombre}!
+    🎉 ¡Felicidades, {nombre}!   
 
     Tu participación en *El Buen Fin Indiana* ha sido validada con éxito ✅  
     Has ganado un *{premio}* 🏆
 
     Nuestro equipo se pondrá en contacto contigo para coordinar la entrega.
-    Mantente pendiente de tu WhatsApp 📱
+    Mantente pendiente de tu WhatsApp 📱  
     Recuerda que entre más compres, ¡mayor puede ser tu recompensa! ⚡  
 
-    🔗 Si deseas conocer más sobre la dinámica, visita:
+    🔗 Bases completas:
     👉 www.buenfinindiana.com/bases
-
-    ¡Gracias por participar!
     """
     wsend(telefono, msg)
 
@@ -674,6 +679,7 @@ def asignar_premio():
         "telefono": telefono,
         "monto": cantidad_detectada
     })
+
 
 @app.route("/catalogo")
 def catalogo():

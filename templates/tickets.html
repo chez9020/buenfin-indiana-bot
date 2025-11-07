@@ -176,9 +176,8 @@
       {% endif %}
       </td>
       <td>
-        <!-- prettier-ignore -->
         <button class="btn-asignar"
-                onclick="asignarPremio('{{ t.telefono }}', {{ loop.index }}, this)">
+        onclick="asignarPremio('{{ t.telefono }}', {{ t.row_index }}, {{ loop.index }}, this)">
         🎁 Asignar premio
         </button>
       </td>
@@ -195,7 +194,7 @@
 </footer>
 
 <script>
-async function asignarPremio(telefono, index, btn) {
+async function asignarPremio(telefono, row_index, index, btn)  {
   const input = document.getElementById(`cantidad_${index}`);
   const cantidad_detectada = parseFloat(input.value);
 
@@ -215,7 +214,7 @@ async function asignarPremio(telefono, index, btn) {
     const res = await fetch("/asignar-premio", {
       method: "POST",
       headers: { "Content-Type": "application/json" },
-      body: JSON.stringify({ telefono, cantidad_detectada })
+      body: JSON.stringify({ telefono, row_index, cantidad_detectada })
     });
 
     const data = await res.json();
