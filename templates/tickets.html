@@ -137,6 +137,12 @@
 <body>
 
 <h1>Tickets pendientes de validación</h1>
+
+<!-- Botón de refresco manual -->
+<div style="text-align:right; margin-bottom:15px;">
+    <button id="btn-refresh" class="btn-actualizar">🔄 Actualizar ahora</button>
+</div>
+
 <p class="status">Actualizado: {{ hora_actual }} UTC</p>
 
 {% if tickets %}
@@ -342,6 +348,17 @@ document.addEventListener("click", function (e) {
         const index = btn.dataset.index;
         asignarPremio(telefono, rowIndex, index, btn);
     }
+});
+
+document.getElementById("btn-refresh").addEventListener("click", async () => {
+    const btn = document.getElementById("btn-refresh");
+    btn.disabled = true;
+    btn.textContent = "⏳ Actualizando...";
+
+    await actualizarTabla();
+
+    btn.disabled = false;
+    btn.textContent = "🔄 Actualizar ahora";
 });
 </script>
 </html>
