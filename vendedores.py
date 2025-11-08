@@ -41,5 +41,32 @@ VENDEDORES = {
     "V040" : "Jesús Enrique Robles Garcia",
     "V041" : "Esmeralda Zavala",
     "V042" : "Victor Manuel",
-    "V043" : "Ricardo Espinosa Solorio"
+    "V043" : "Ricardo Espinosa Solorio",
+    "V044": "Aliza Adriana De la Cruz del campo"
+    "V045": "Carmen Berenice Hernández Ruiz"
+    "V046": "Rosalba Sandoval"
+    "V047": "Oscar Salguero"
+    "V048": "Armando Ornelas"
+    "V049": "Angel Reyes Piñon Arredondo"
+    "V050": "Mauricio Salas Piña"
+    "V051": "Juan Carlos Figueroa Solorio"
+    "V052": "Jose Angel Peres Lopez"
+    "V053": "Julio Cesar Gualajara Flores"
+    "V054": "Jorge Omar Gómez Ramos"
+    "V055": "Hugo Mauricio Estrada Mejia"
+    "V056": "Luis Francisco Matias Barajas"
+    "V057": "Luis Andres Victorio Valdovinos"
+    "V058": "Jesús Juárez"
+    "V059": "Miguel Angel Castellanos"
+    "V060": "Ahtziri Olivo Paredes"
+    "V061": "Zenon Medina Salgado"
+    "V062": "Nancy Felix"
+    "V063": "Mariana Martinez"
+    "V064": "Ity yelania Vidal Huerta"
+    "V065": "Leonardo Estefanía Castillo Martinez"
+    "V066": "Irma Alfonzo Valdez"
+    "V067": "Alma America Acosta Torres"
+    "V068": "Gerardo Alejandro Vargas Dueñas"
+    "V069": "Francisco Javier Madrigal"
+    "V070": "Cristhian Guerrero"
 }
