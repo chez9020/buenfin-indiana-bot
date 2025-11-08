@@ -255,7 +255,8 @@ def auto_sync_from_sheets_if_stale(max_age_s=AUTO_SYNC_MAX_AGE_S, mode="availabl
 # ------------------ Flujo Buen Fin Indiana ------------------
 # Campos que se pedirán por texto/botón ANTES de la foto:
 # 1) nombre, 2) tienda, 3) rfc_nombre, 4) ocupacion (botones), 5) festejo (botones)
-CAMPOS = ["nombre", "tienda", "rfc_nombre", "ocupacion", "festejo", "medio"]
+#CAMPOS = ["nombre", "tienda", "rfc_nombre", "ocupacion", "festejo", "medio"]
+CAMPOS = ["nombre", "tienda", "rfc_nombre", "ocupacion", "medio"]
 TOTAL_CAMPOS = len(CAMPOS)  # cuando paso == TOTAL_CAMPOS, esperamos la foto
 
 BIENVENIDA = (
@@ -412,31 +413,31 @@ def webhook():
                 )
                 return jsonify({"status": "rfc_nombre ok"}), 200
 
-            # 3) ocupacion (botón)
+            # # 3) ocupacion (botón)
+            # if campo == "ocupacion":
+            #     usuario["respuestas"]["ocupacion"] = texto
+            #     usuario["paso"] += 1
+            #     guardar_sesion(telefono, usuario)
+
+            #     # Botones: ¿Qué estamos festejando?
+            #     wa.send_reply_button(
+            #         recipient_id=telefono,
+            #         button={
+            #             "type": "button",
+            #             "body": {"text": "🎉 ¿Qué *estamos festejando* con esta promoción?"},
+            #             "action": {
+            #                 "buttons": [
+            #                     {"type": "reply", "reply": {"id": "1", "title": "Buen Fin"}},
+            #                     {"type": "reply", "reply": {"id": "2", "title": "14 de Feb"}},
+            #                     {"type": "reply", "reply": {"id": "3", "title": "Pascua"}},
+            #                 ]
+            #             },
+            #         },
+            #     )
+            #     return jsonify({"status": "ocupacion ok"}), 200
+            # 4) medio (botón)
             if campo == "ocupacion":
                 usuario["respuestas"]["ocupacion"] = texto
-                usuario["paso"] += 1
-                guardar_sesion(telefono, usuario)
-
-                # Botones: ¿Qué estamos festejando?
-                wa.send_reply_button(
-                    recipient_id=telefono,
-                    button={
-                        "type": "button",
-                        "body": {"text": "🎉 ¿Qué *estamos festejando* con esta promoción?"},
-                        "action": {
-                            "buttons": [
-                                {"type": "reply", "reply": {"id": "1", "title": "Buen Fin"}},
-                                {"type": "reply", "reply": {"id": "2", "title": "14 de Feb"}},
-                                {"type": "reply", "reply": {"id": "3", "title": "Pascua"}},
-                            ]
-                        },
-                    },
-                )
-                return jsonify({"status": "ocupacion ok"}), 200
-            # 4) medio (botón)
-            if campo == "festejo":
-                usuario["respuestas"]["festejo"] = texto
                 usuario["paso"] += 1
                 guardar_sesion(telefono, usuario)
 
