@@ -10,8 +10,6 @@ from sheets_logger import registrar_ticket_en_sheets
 from sheets_utils import open_worksheet, parse_money
 from control_inventario import obtener_premio_disponible, obtener_premio_especial
 from vendedores import VENDEDORES
-import uuid
-import base64
 
 # ------------------ Config básica ------------------
 load_dotenv()
@@ -245,8 +243,7 @@ def auto_sync_from_sheets_if_stale(max_age_s=AUTO_SYNC_MAX_AGE_S, mode="availabl
     if not force and (now - last_ts) < max_age_s:
         return {"ran": False, "last_ts": last_ts}
 
-    if not r.set("premio_sync:lock", "1", nx=True, ex=30):
-        return {"ran": False, "last_ts": last_ts, "locked": True}
+    r.set("premio_sync:lock", "1", ex=30)
 
     try:
         res = _sync_redis_from_sheets(mode=mode, preview=False)
@@ -702,7 +699,7 @@ def inventario_json():
     # auto-sync (cada hora por defecto); forzar con ?sync=1
     if AUTO_SYNC_ON_DASHBOARD:
         auto_sync_from_sheets_if_stale(
-            force=(request.args.get("sync") == "1"),
+            force=True,
             mode="available"
         )
 
@@ -738,11 +735,10 @@ def inventario_json():
 @app.route("/inventario", methods=["GET"])
 def inventario_html():
     # auto-sync (cada hora por defecto); forzar con ?sync=1
-    if AUTO_SYNC_ON_DASHBOARD:
-        auto_sync_from_sheets_if_stale(
-            force=(request.args.get("sync") == "1"),
-            mode="available"
-        )
+    auto_sync_from_sheets_if_stale(
+        force=True,
+        mode="available"
+    )
 
     asignados_map, total_asignados = contar_premios_asignados()
     todos = sorted(set(DEFAULT_PREMIOS.keys()) | set(asignados_map.keys()), key=lambda x: x.lower())
