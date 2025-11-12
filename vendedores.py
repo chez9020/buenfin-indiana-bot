@@ -134,5 +134,22 @@ VENDEDORES = {
     "V133" : "Dulce Reyes Bastida",
     "V134" : "Blanca Estela Carmona García",
     "V135" : "Claudia García Landero",
-    "V136" : "Alejandra Rivera Menchaca"
+    "V136" : "Alejandra Rivera Menchaca",
+    "V137":"Luis Antonio Sanchez Sanchez",
+    "V138":"Ilse Sánchez reyes",
+    "V139":"Carmen Cruz Islas",
+    "V140":"Gerardo Zamora Barbero",
+    "V141":"Alan Dario Aguilar Escoto",
+    "V142":"Maribel Rodriguez",
+    "V143":"Oscar Moreno",
+    "V144":"Viridiana Reyes",
+    "V145":"Luis Conde",
+    "V146":"Fernando Lujan",
+    "V147":"Maribel Aguilar Lopez",
+    "V148":"Hugo Alberto Ruiz Jimenez",
+    "V149":"Daniel Jacobo macias",
+    "V150":"Nancy Ceniceros Reza",
+    "V151":"Diego Armando Trujillo Gonzalez",
+    "V152":"Adhiel Salgado",
+    "V153":"Jossue Yarith Gutierrez Vázquez"
 }
