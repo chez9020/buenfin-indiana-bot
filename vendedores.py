@@ -209,4 +209,17 @@ VENDEDORES = {
     "V208" : "Karla Cardenas",
     "V209" : "Sylvia Carolina Galvan Ortegón",
     "V210" : "Jose Guillermo   Castillo Luna",
+    "V211" : "José Ricardo Sánchez Cruz",
+    "V212" : "Alexis Francisco Alvarado",
+    "V213" : "Karla Viridiana Rangel Weymar",
+    "V214" : "Neidi Uriarte valdez  ",
+    "V215" : "Ismael Estrada Arrieta  ",
+    "V216" : "Rafael Carbajal Pinal",
+    "V217" : "Juan Jaime Santos  ",
+    "V218" : "Lilia Esther Dominguez Carrasco",
+    "V219" : "Jorge Alberto Juarez Ortiz",
+    "V220" : "Gabriel Cota",
+    "V221" : "Alan Pavel Arellano Molina ",
+    "V222" : "José Román Luevano Rodriguez",
+    "V223" : "Manuel Alejandro Betancurt Castillo"
 }
