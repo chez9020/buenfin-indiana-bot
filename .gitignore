@@ -10,7 +10,7 @@ __pycache__/
 *.pyd
 *.log
 *.sqlite3
-
+generar_qr.py
 # --- Archivos del sistema ---
 .DS_Store
 Thumbs.db
@@ -26,3 +26,4 @@ credentials/
 *.zip
 *.tar.gz
 *.bak
+*.png
