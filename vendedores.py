@@ -295,6 +295,20 @@ VENDEDORES = {
     "V294" : "Alejandra Hernandez Mendoza",
     "V295" : "Miriam Corina Plata Curiel",
     "V296" : "Eduardo Luis Mercado Martínez",
-    "V297" : "Vladimir Calderon reyes",
-    "V298" : "Yereli Montserrat Martinez Campos"
+    "V297" : "Vladimir Calderon Reyes",
+    "V298" : "Yereli Montserrat Martinez Campos",
+    "V299" : "José Martín García Solorio",
+    "V300" : "Armando Rodrigo Nila Adame",
+    "V301" : "Romeo Gutierrez",
+    "V302" : "Loreto Martinez Lucero",
+    "V303" : "Rocío Sarahí Tovar Martínez",
+    "V304" : "Victor Manuel Banda ricondo",
+    "V305" : "Agustin Castro Mariscal",
+    "V306" : "Yuvia yazmin Moreno rodriguez",
+    "V307" : "Angeles Lopez",
+    "V308" : "Nancy Calleja",
+    "V309" : "Paola Errera",
+    "V310" : "Josselin Mejia",
+    "V311" : "Tania Gerardo",
+    "V312" : "Yuridiana Lopez"
 }
