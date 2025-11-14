@@ -286,5 +286,15 @@ VENDEDORES = {
     "V285" : "Giovanni Lopez Garcia",
     "V286" : "Daniela Solis Gallegos  ",
     "V287" : "Jaime Antuna Vazquez",
-    "V288" : "Yolanda Vazquez Alcaraz"
+    "V288" : "Yolanda Vazquez Alcaraz",
+    "V289" : "Magaly Sarahi Aviña Jimenez",
+    "V290" : "Jesus Edel Gonzalez estrada",
+    "V291" : "Karla Cardenas",
+    "V292" : "Jocelyn Guel",
+    "V293" : "Raúl Javier Oceguera Reyes",
+    "V294" : "Alejandra Hernandez Mendoza",
+    "V295" : "Miriam Corina Plata Curiel",
+    "V296" : "Eduardo Luis Mercado Martínez",
+    "V297" : "Vladimir Calderon reyes",
+    "V298" : "Yereli Montserrat Martinez Campos"
 }
