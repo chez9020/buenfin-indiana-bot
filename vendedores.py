@@ -310,5 +310,22 @@ VENDEDORES = {
     "V309" : "Paola Errera",
     "V310" : "Josselin Mejia",
     "V311" : "Tania Gerardo",
-    "V312" : "Yuridiana Lopez"
+    "V312" : "Yuridiana Lopez",
+    "V313" : "Cristian Guiza",
+    "V314" : "Eduardo Mendoza",
+    "V315" : "Andrea Paulina Cangas Trujillo",
+    "V316" : "Brandon Nava",
+    "V317" : "Neydi Elena Couoh Lopez",
+    "V318" : "Ana María Toledo de la Cruz",
+    "V319" : "Brenda de León Martinez",
+    "V320" : "Rosa Martinez",
+    "V321" : "José Luis Romero Vazquez",
+    "V322" : "Enoc de jesus Hernández López",
+    "V323" : "José Martín García Solorio",
+    "V324" : "Narcedalia Gongora rangel",
+    "V325" : "María Antonia Rodriguez Escalante",
+    "V326" : "Amelia Aguilar Rodriguez",
+    "V327" : "Aidee Cristina Loya Sigala",
+    "V328" : "Guadalupe Silva Guerrero",
+    "V329" : "Fernando Rodríguez Castillo"
 }
