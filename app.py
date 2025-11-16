@@ -44,12 +44,12 @@ def qr_redirect():
     r.incr(f"vendedor:{vendedor_id}:scans")
     r.expire(f"vendedor:{vendedor_id}:scans", 86400)
 
-    vendedor_nombre = VENDEDORES.get(vendedor_id, "Sin vendedor")
+    #vendedor_nombre = VENDEDORES.get(vendedor_id, "Sin vendedor")
 
     telefono_bot = "5217206266927"
 
     mensaje = (
-        f"Hola, quiero participar con {vendedor_nombre} con codigo {vendedor_id}"
+        f"Hola, quiero participar codigo {vendedor_id}"
     )
 
     wa_link = f"https://wa.me/{telefono_bot}?text={mensaje}"
