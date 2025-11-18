@@ -86,7 +86,7 @@ def _armar_row(datos_generales: dict, ticket: dict):
     tienda      = datos_generales.get("tienda", "")
     rfc_nombre  = datos_generales.get("rfc_nombre", "")
     ocupacion   = datos_generales.get("ocupacion", "")
-    festejo     = datos_generales.get("festejo", "")
+    medio     = datos_generales.get("medio", "")
     monto       = datos_generales.get("monto", "")
     premio      = datos_generales.get("premio", "")
     motivo      = datos_generales.get("motivo", "")
@@ -95,7 +95,7 @@ def _armar_row(datos_generales: dict, ticket: dict):
     raw         = json.dumps({"datos": datos_generales, "ticket": ticket}, ensure_ascii=False)
 
     # Orden de columnas sugerido:
-    # Timestamp | Teléfono | Nombre | Tienda | RFC/Nombre Factura | Ocupación | Festejo | Monto | Premio | Motivo | Archivo
+    # Timestamp | Teléfono | Nombre | Tienda | RFC/Nombre Factura | Ocupación | Medio | Monto | Premio | Motivo | Archivo
     return [
         now,         # A: Timestamp
         telefono,    # B
@@ -103,7 +103,7 @@ def _armar_row(datos_generales: dict, ticket: dict):
         tienda,      # D
         rfc_nombre,  # E
         ocupacion,   # F
-        festejo,     # G
+        medio,     # G
         monto,       # H
         premio,      # I
         motivo,      # J

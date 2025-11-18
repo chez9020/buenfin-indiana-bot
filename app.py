@@ -544,7 +544,7 @@ def webhook():
                 "tienda": usuario["respuestas"].get("tienda", ""),
                 "rfc_nombre": usuario["respuestas"].get("rfc_nombre", ""),
                 "ocupacion": usuario["respuestas"].get("ocupacion", ""),
-                "festejo": usuario["respuestas"].get("festejo", ""),
+                "medio": usuario["respuestas"].get("medio", ""),
                 "monto": monto_ticket,
                 "motivo": motivo_ocr,
                 "vendedor": usuario["respuestas"].get("vendedor", "Sin vendedor"),
