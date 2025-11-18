@@ -327,5 +327,9 @@ VENDEDORES = {
     "V326" : "Amelia Aguilar Rodriguez",
     "V327" : "Aidee Cristina Loya Sigala",
     "V328" : "Guadalupe Silva Guerrero",
-    "V329" : "Fernando Rodríguez Castillo"
+    "V329" : "Fernanda Rodríguez Castillo",
+    "V330" : "Alejandro Medina Ruiz",
+    "V331" : "Lizeth Griselda Ramirez Hernandez",
+    "V332" : "Samay Pochon ",
+    "V333" : "Javier Martinez"
 }
