@@ -49,7 +49,7 @@ def qr_redirect():
     telefono_bot = "5217206266927"
 
     mensaje = (
-        f"Hola, quiero participar codigo {vendedor_id}"
+        f"Hola, gracias por regístrate con id {vendedor_id}, Envia este mensaje para iniciar tu registro."
     )
 
     wa_link = f"https://wa.me/{telefono_bot}?text={mensaje}"
