@@ -162,7 +162,7 @@ DEFAULT_PREMIOS = {
     "Smartphone": 25,
     "Amazon $500": 400,
     "Electrodoméstico o Tarjeta Liverpool": 250,
-    "Motoneta": 2,
+    "Motoneta": 1,
     'Pantalla 40"': 30,
     "Amazon $2,000": 100
 }
