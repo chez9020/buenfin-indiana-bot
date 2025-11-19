@@ -331,5 +331,9 @@ VENDEDORES = {
     "V330" : "Alejandro Medina Ruiz",
     "V331" : "Lizeth Griselda Ramirez Hernandez",
     "V332" : "Samay Pochon ",
-    "V333" : "Javier Martinez"
+    "V333" : "Javier Martinez",
+    "V334" : "Florentino Tolentino Arellano",
+    "V335" : "Juan del Angel Hernández",
+    "V336" : "César Damián",
+    "V337" : "Raymundo Ibarra"
 }
