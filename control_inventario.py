@@ -48,10 +48,10 @@ def obtener_premio_especial(redis_conn, monto_factura):
     RANGOS_PREMIOS = [
         (6000,   9999,   "Pelacables"),
         (10000,  19999,  "Amazon $500"),
-        (20000,  39999,  "Electrodoméstico o Tarjeta Liverpool"),
-        (40000,  59999,  "Amazon $2000"),
+        (20000,  39999,  "Electrodomésticos"),
+        (40000,  59999,  "Amazon $1500"),
         (60000,  99999,  'Pantalla 40"'),
-        (100000, 149999, "Amazon $5000"),
+        (100000, 149999, "Amazon $3500"),
         (150000, 199999, "Smartphone"),
         (200000, 299999, "Tablet premium"),
         (300000, 499999, "Motoneta"),
