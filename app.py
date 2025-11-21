@@ -256,7 +256,7 @@ def auto_sync_from_sheets_if_stale(max_age_s=AUTO_SYNC_MAX_AGE_S, mode="availabl
 # Campos que se pedirán por texto/botón ANTES de la foto:
 # 1) nombre, 2) tienda, 3) rfc_nombre, 4) ocupacion (botones), 5) festejo (botones)
 #CAMPOS = ["nombre", "tienda", "rfc_nombre", "ocupacion", "festejo", "medio"]
-CAMPOS = ["nombre", "tienda", "rfc_nombre", "ocupacion", "medio"]
+CAMPOS = ["nombre", "tienda", "rfc_nombre", "correo", "ocupacion", "medio"]
 TOTAL_CAMPOS = len(CAMPOS)  # cuando paso == TOTAL_CAMPOS, esperamos la foto
 
 BIENVENIDA = (
@@ -268,7 +268,8 @@ PREGUNTAS = [
     "¡Listo! Por favor, escribe tu *nombre completo*.",
     "Cuéntanos, ¿*en qué tienda* realizaste tu compra?",
     "Ingresa el *RFC o Nombre completo* a quien está registrado el ticket o factura.\n"
-    "No importa si lo estás registrando con autorización de alguien más."
+    "No importa si lo estás registrando con autorización de alguien más.",
+    "Por favor ingresa tu *correo electrónico*."
 ]
 
 VALIDACION_MSG = (
@@ -412,8 +413,37 @@ def webhook():
                     },
                 )
                 return jsonify({"status": "rfc_nombre ok"}), 200
+            # 3) correo electrónico
+            if campo == "correo":
+                # Validar correo rápido
+                import re
+                patron = r"^[\w\.-]+@[\w\.-]+\.\w+$"
+                if not re.match(patron, texto):
+                    wsend(telefono, "❌ El correo no parece válido.\nPor favor ingresa un *correo electrónico* válido.")
+                    return jsonify({"status": "correo inválido"}), 200
 
-            # # 3) ocupacion (botón)
+                usuario["respuestas"]["correo"] = texto
+                usuario["paso"] += 1
+                guardar_sesion(telefono, usuario)
+
+                # Continuar a ocupación
+                wa.send_reply_button(
+                    recipient_id=telefono,
+                    button={
+                        "type": "button",
+                        "body": {"text": "¿Cuál es tu *ocupación principal*?"},
+                        "action": {
+                            "buttons": [
+                                {"type": "reply", "reply": {"id": "1", "title": "Electricista"}},
+                                {"type": "reply", "reply": {"id": "2", "title": "Contratista"}},
+                                {"type": "reply", "reply": {"id": "3", "title": "Otro"}},
+                            ]
+                        },
+                    },
+                )
+                return jsonify({"status": "correo ok"}), 200
+
+                        # # 3) ocupacion (botón)
             # if campo == "ocupacion":
             #     usuario["respuestas"]["ocupacion"] = texto
             #     usuario["paso"] += 1
@@ -543,6 +573,7 @@ def webhook():
                 "nombre": usuario["respuestas"].get("nombre", ""),
                 "tienda": usuario["respuestas"].get("tienda", ""),
                 "rfc_nombre": usuario["respuestas"].get("rfc_nombre", ""),
+                "correo": usuario["respuestas"].get("correo", ""),  # 👈 AGREGAR ESTO
                 "ocupacion": usuario["respuestas"].get("ocupacion", ""),
                 "medio": usuario["respuestas"].get("medio", ""),
                 "monto": monto_ticket,
@@ -551,7 +582,6 @@ def webhook():
                 "nombre_archivo": f"{URL_SERVER}/catalogo_img/{path_ticket}" if path_ticket else "",
                 "premio": nuevo_ticket.get("premio", "")
             }
-
             # Historial
             usuario.setdefault("tickets", []).append(nuevo_ticket)
             guardar_sesion(telefono, usuario)

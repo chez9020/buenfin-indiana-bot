@@ -85,6 +85,7 @@ def _armar_row(datos_generales: dict, ticket: dict):
     nombre      = datos_generales.get("nombre", "")
     tienda      = datos_generales.get("tienda", "")
     rfc_nombre  = datos_generales.get("rfc_nombre", "")
+    correo      = datos_generales.get("correo", "")
     ocupacion   = datos_generales.get("ocupacion", "")
     medio     = datos_generales.get("medio", "")
     monto       = datos_generales.get("monto", "")
@@ -102,6 +103,7 @@ def _armar_row(datos_generales: dict, ticket: dict):
         nombre,      # C
         tienda,      # D
         rfc_nombre,  # E
+        correo,
         ocupacion,   # F
         medio,     # G
         monto,       # H
