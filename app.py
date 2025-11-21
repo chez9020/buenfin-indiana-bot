@@ -391,23 +391,22 @@ def webhook():
                 wsend(telefono, PREGUNTAS[2])  # Pregunta RFC
                 return jsonify({"status": "tienda ok"}), 200
 
-            # 2) rfc_nombre -> EL ERROR ESTABA AQUÍ
+            # 2) rfc_nombre
             if campo == "rfc_nombre":
                 usuario["respuestas"]["rfc_nombre"] = texto
                 usuario["paso"] += 1
                 guardar_sesion(telefono, usuario)
-
-                # CORRECCIÓN: Aquí debemos pedir el CORREO, no la ocupación
-                wsend(telefono, PREGUNTAS[4]) # "Por favor ingresa tu correo electrónico."
+                # CORRECCIÓN: Aquí pedimos el CORREO explícitamente
+                wsend(telefono, PREGUNTAS[4]) 
                 return jsonify({"status": "rfc_nombre ok"}), 200
 
             # 3) correo electrónico
             if campo == "correo":
-                # Validar correo con regex
+                # Validar correo con regex simple
                 import re
                 patron = r"^[\w\.-]+@[\w\.-]+\.\w+$"
                 if not re.match(patron, texto):
-                    wsend(telefono, "❌ El correo no parece válido.\nPor favor ingresa un *correo electrónico* válido.")
+                    wsend(telefono, "❌ El correo no parece válido.\nPor favor ingresa un *correo electrónico* válido (ejemplo: nombre@gmail.com).")
                     return jsonify({"status": "correo inválido"}), 200
 
                 usuario["respuestas"]["correo"] = texto
@@ -451,16 +450,9 @@ def webhook():
 
             # 5) medio (validación numérica 1–4)
             if campo == "medio":
-                # Validar número
-                if texto not in ("1", "2", "3", "4"):
-                    wsend(
-                        telefono,
-                        "❌ Opción no válida. Por favor responde con un número del *1 al 4*:\n\n"
-                        "1️⃣ Radio\n"
-                        "2️⃣ Cartel publicitario\n"
-                        "3️⃣ En tienda\n"
-                        "4️⃣ Redes sociales"
-                    )
+                validos = ["1", "2", "3", "4"]
+                if texto not in validos:
+                    wsend(telefono, "❌ Por favor escribe solo el número (1, 2, 3 o 4).")
                     return jsonify({"status": "respuesta inválida (medio)"}), 200
 
                 opciones = {
@@ -478,9 +470,7 @@ def webhook():
                 wsend(
                     telefono,
                     "📸 ¡Genial!\nEnvía una *foto clara* de tu *ticket/factura* participante.\n"
-                    "Procura que se vea completo y legible: *folio, razón social o nombre y producto Indiana* "
-                    "por *monto mayor a $6,000 + IVA*.\n"
-                    "Las *cotizaciones no participan*."
+                    "Asegúrate que se vea: Folio, Fecha, Monto y Productos Indiana."
                 )
                 return jsonify({"status": "medio ok, pedir foto"}), 200
 
