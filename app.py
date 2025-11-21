@@ -380,7 +380,7 @@ def webhook():
                 usuario["respuestas"]["nombre"] = texto
                 usuario["paso"] += 1
                 guardar_sesion(telefono, usuario)
-                wsend(telefono, PREGUNTAS[1])  # tienda
+                wsend(telefono, PREGUNTAS[1])  # Pregunta tienda
                 return jsonify({"status": "nombre ok"}), 200
 
             # 1) tienda
@@ -388,34 +388,22 @@ def webhook():
                 usuario["respuestas"]["tienda"] = texto
                 usuario["paso"] += 1
                 guardar_sesion(telefono, usuario)
-                wsend(telefono, PREGUNTAS[2])  # rfc/nombre
+                wsend(telefono, PREGUNTAS[2])  # Pregunta RFC
                 return jsonify({"status": "tienda ok"}), 200
 
-            # 2) rfc_nombre
+            # 2) rfc_nombre -> EL ERROR ESTABA AQUÍ
             if campo == "rfc_nombre":
                 usuario["respuestas"]["rfc_nombre"] = texto
                 usuario["paso"] += 1
                 guardar_sesion(telefono, usuario)
 
-                # Botones: Ocupación (orden solicitado: 1 Electricista, 2 Contratista, 3 Otro)
-                wa.send_reply_button(
-                    recipient_id=telefono,
-                    button={
-                        "type": "button",
-                        "body": {"text": "¿Cuál es tu *ocupación principal*?"},
-                        "action": {
-                            "buttons": [
-                                {"type": "reply", "reply": {"id": "1", "title": "Electricista"}},
-                                {"type": "reply", "reply": {"id": "2", "title": "Contratista"}},
-                                {"type": "reply", "reply": {"id": "3", "title": "Otro"}},
-                            ]
-                        },
-                    },
-                )
+                # CORRECCIÓN: Aquí debemos pedir el CORREO, no la ocupación
+                wsend(telefono, PREGUNTAS[4]) # "Por favor ingresa tu correo electrónico."
                 return jsonify({"status": "rfc_nombre ok"}), 200
+
             # 3) correo electrónico
             if campo == "correo":
-                # Validar correo rápido
+                # Validar correo con regex
                 import re
                 patron = r"^[\w\.-]+@[\w\.-]+\.\w+$"
                 if not re.match(patron, texto):
@@ -426,7 +414,7 @@ def webhook():
                 usuario["paso"] += 1
                 guardar_sesion(telefono, usuario)
 
-                # Continuar a ocupación
+                # AHORA SÍ: Pedimos la Ocupación con botones
                 wa.send_reply_button(
                     recipient_id=telefono,
                     button={
@@ -443,35 +431,13 @@ def webhook():
                 )
                 return jsonify({"status": "correo ok"}), 200
 
-                        # # 3) ocupacion (botón)
-            # if campo == "ocupacion":
-            #     usuario["respuestas"]["ocupacion"] = texto
-            #     usuario["paso"] += 1
-            #     guardar_sesion(telefono, usuario)
-
-            #     # Botones: ¿Qué estamos festejando?
-            #     wa.send_reply_button(
-            #         recipient_id=telefono,
-            #         button={
-            #             "type": "button",
-            #             "body": {"text": "🎉 ¿Qué *estamos festejando* con esta promoción?"},
-            #             "action": {
-            #                 "buttons": [
-            #                     {"type": "reply", "reply": {"id": "1", "title": "Buen Fin"}},
-            #                     {"type": "reply", "reply": {"id": "2", "title": "14 de Feb"}},
-            #                     {"type": "reply", "reply": {"id": "3", "title": "Pascua"}},
-            #                 ]
-            #             },
-            #         },
-            #     )
-            #     return jsonify({"status": "ocupacion ok"}), 200
-            # 4) medio (botón)
+            # 4) ocupacion (botón)
             if campo == "ocupacion":
                 usuario["respuestas"]["ocupacion"] = texto
                 usuario["paso"] += 1
                 guardar_sesion(telefono, usuario)
 
-                # Enviar mensaje con opciones numeradas (sin botones)
+                # Enviar mensaje con opciones numeradas para MEDIO
                 wsend(
                     telefono,
                     "📢 ¿Por qué medio te enteraste de la promoción?\n\n"
@@ -481,7 +447,7 @@ def webhook():
                     "4️⃣ Redes sociales\n\n"
                     "Por favor, responde con el *número* de tu opción (1–4)."
                 )
-                return jsonify({"status": "pregunta medio enviada"}), 200
+                return jsonify({"status": "ocupacion ok"}), 200
 
             # 5) medio (validación numérica 1–4)
             if campo == "medio":
