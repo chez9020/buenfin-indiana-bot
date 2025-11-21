@@ -397,7 +397,7 @@ def webhook():
                 usuario["paso"] += 1
                 guardar_sesion(telefono, usuario)
                 # CORRECCIÓN: Aquí pedimos el CORREO explícitamente
-                wsend(telefono, PREGUNTAS[4]) 
+                wsend(telefono, PREGUNTAS[3]) 
                 return jsonify({"status": "rfc_nombre ok"}), 200
 
             # 3) correo electrónico
