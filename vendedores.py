@@ -354,5 +354,7 @@ VENDEDORES = {
     "V353" : "Patricia Romero",
     "V354" : "Guadalupe Gomez Saldaña",
     "V355" : "Vanessa Arreola Rodriguez",
-    "V356" : "Victor Manuel Martinez Rodriguez"
+    "V356" : "Victor Manuel Martinez Rodriguez",
+    "V357" : "Eduardo Monteon Ibarra",
+    "V358" : "Melesio Bernardo Perez duran"
 }
