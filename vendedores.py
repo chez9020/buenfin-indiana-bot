@@ -356,5 +356,10 @@ VENDEDORES = {
     "V355" : "Vanessa Arreola Rodriguez",
     "V356" : "Victor Manuel Martinez Rodriguez",
     "V357" : "Eduardo Monteon Ibarra",
-    "V358" : "Melesio Bernardo Perez duran"
+    "V358" : "Melesio Bernardo Perez duran",
+    "V359" : "Carlos Saul Andrade Ávila",
+    "V360" : "Elizabeth	Basilio Gonzalez",
+    "V361" : "Karla Roberta	Oropeza Sisniega",
+    "V362" : "Guadalupe	Marquez Gomez",
+    "V363" : "Saul Andrade Avila"
 }
