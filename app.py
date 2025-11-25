@@ -643,14 +643,15 @@ def asignar_premio():
 
     # 7. Enviar mensaje al WhatsApp
     msg = f"""
-    🎉 ¡Felicidades, {nombre}!   
+    🎉 ¡Felicidades, {nombre}!
 
-    Tu participación en *El Buen Fin Indiana* ha sido validada con éxito ✅  
+    Tu participación en *El Buen Fin Indiana* ha sido validada con éxito ✅
     Has ganado un *{premio}* 🏆
 
-    Nuestro equipo se pondrá en contacto contigo para coordinar la entrega.
-    Mantente pendiente de tu WhatsApp 📱  
-    Recuerda que entre más compres, ¡mayor puede ser tu recompensa! ⚡  
+    Si hubiera algún detalle con tu entrega, nuestro equipo se pondrá en contacto.
+    El tiempo de entrega de tu premio es de 5 a 7 días hábiles.
+    Mantente pendiente de tu WhatsApp 📱
+    Recuerda que entre más compres, ¡mayor puede ser tu recompensa! ⚡
 
     🔗 Bases completas:
     👉 www.buenfinindiana.com/bases
