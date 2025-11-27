@@ -371,6 +371,6 @@ VENDEDORES = {
     "V370" : "Luis Enrique Gomez Gonzalez",
     "V371" : "Adrian Nandayapa Beltrán",
     "V372" : "Araceli Mancila Rodriguez",
-    "V373" : "Nelva Daniela	",
+    "V373" : "Nelva Daniela",
     "V374" : "Ariadna Belen Sanchez Garcia"
 }
