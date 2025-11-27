@@ -362,5 +362,15 @@ VENDEDORES = {
     "V361" : "Karla Roberta	Oropeza Sisniega",
     "V362" : "Guadalupe	Marquez Gomez",
     "V363" : "Saul Andrade Avila",
-    "V364" : "Ricardo Antonio Sanchez Chavez"
+    "V364" : "Ricardo Antonio Sanchez Chavez",
+    "V365" : "Luz Elena Amaya Vazquez",
+    "V366" : "Katya Fernanda Acero Ramos",
+    "V367" : "Mayra Alejandra Balderas Niño",
+    "V368" : "Victoria Monserrat Ramirez Cadena",
+    "V369" : "Justino Pérez Hernández",
+    "V370" : "Luis Enrique Gomez Gonzalez",
+    "V371" : "Adrian Nandayapa Beltrán",
+    "V372" : "Araceli Mancila Rodriguez",
+    "V373" : "Nelva Daniela	",
+    "V374" : "Ariadna Belen Sanchez Garcia"
 }
