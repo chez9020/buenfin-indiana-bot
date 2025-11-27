@@ -361,5 +361,6 @@ VENDEDORES = {
     "V360" : "Elizabeth	Basilio Gonzalez",
     "V361" : "Karla Roberta	Oropeza Sisniega",
     "V362" : "Guadalupe	Marquez Gomez",
-    "V363" : "Saul Andrade Avila"
+    "V363" : "Saul Andrade Avila",
+    "V364" : "Ricardo Antonio Sanchez Chavez"
 }
