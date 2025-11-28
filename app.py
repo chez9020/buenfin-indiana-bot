@@ -156,7 +156,7 @@ def contar_premios_asignados():
         return {}, 0
 
 DEFAULT_PREMIOS = {
-    "Pelacables": 350,
+    "Pelacables": 380,
     "Amazon $3500": 33,
     "Tablet premium": 10,
     "Smartphone": 25,
