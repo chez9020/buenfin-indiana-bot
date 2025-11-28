@@ -163,8 +163,8 @@ DEFAULT_PREMIOS = {
     "Amazon $500": 400,
     "Electrodomésticos": 250,
     "Motoneta": 1,
-    'Pantalla 40"': 30,
-    "Amazon $1500": 100
+    'Pantalla 40"': 46,
+    "Amazon $1500": 110
 }
 
 def _union_premios(defaults: dict, asignados: dict):
