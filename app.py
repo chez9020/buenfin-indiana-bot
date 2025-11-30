@@ -156,15 +156,15 @@ def contar_premios_asignados():
         return {}, 0
 
 DEFAULT_PREMIOS = {
-    "Pelacables": 380,
-    "Amazon $3500": 33,
-    "Tablet premium": 10,
-    "Smartphone": 25,
-    "Amazon $500": 400,
-    "Electrodomésticos": 250,
+    "Pelacables": 402,
+    "Amazon $3500": 38,
+    "Tablet premium": 12,
+    "Smartphone": 28,
+    "Amazon $500": 410,
+    "Electrodomésticos": 257,
     "Motoneta": 1,
-    'Pantalla 40"': 46,
-    "Amazon $1500": 110
+    'Pantalla 40"': 48,
+    "Amazon $1500": 117
 }
 
 def _union_premios(defaults: dict, asignados: dict):
