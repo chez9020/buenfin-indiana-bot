@@ -262,10 +262,10 @@ TOTAL_CAMPOS = len(CAMPOS)  # cuando paso == TOTAL_CAMPOS, esperamos la foto
 BIENVENIDA = (
     """La promoción Buen Fin Indiana 2025 ha llegado a su cierre oficial y queremos agradecer tu participación. Tu confianza y preferencia hicieron posible ¡el gran éxito de esta edición!.
 
-    En los próximos días continuaremos con la validación final y la entrega de premios pendientes a clientes finales y ejecutivos.
-    Gracias por elegir Indiana Wire & Cable
+En los próximos días continuaremos con la validación final y la entrega de premios pendientes a clientes finales y ejecutivos.
+Gracias por elegir Indiana Wire & Cable
 
-    ¡Nos vemos en 2026!"""
+¡Nos vemos en 2026!"""
 )
 
 PREGUNTAS = [
