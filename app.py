@@ -260,8 +260,12 @@ CAMPOS = ["nombre", "tienda", "rfc_nombre", "correo", "ocupacion", "medio"]
 TOTAL_CAMPOS = len(CAMPOS)  # cuando paso == TOTAL_CAMPOS, esperamos la foto
 
 BIENVENIDA = (
-    "👋 ¡Hola!\nBienvenido al *Buen Fin Indiana* ⚡\n"
-    "Para iniciar tu registro, escribe *QUIERO PARTICIPAR*"
+    """La promoción Buen Fin Indiana 2025 ha llegado a su cierre oficial y queremos agradecer tu participación. Tu confianza y preferencia hicieron posible ¡el gran éxito de esta edición!.
+
+    En los próximos días continuaremos con la validación final y la entrega de premios pendientes a clientes finales y ejecutivos.
+    Gracias por elegir Indiana Wire & Cable
+
+    ¡Nos vemos en 2026!"""
 )
 
 PREGUNTAS = [
@@ -278,10 +282,11 @@ VALIDACION_MSG = (
     "Si tienes dudas, escríbenos al 📞 55 3478 4786 o 55 1954 2345."
 )
 
-# ------------------ Webhook ------------------
+# ------------------ Webhook Modo "Campaña Finalizada" ------------------
 @app.route("/webhook", methods=["GET", "POST"])
 @app.route("/webhook/", methods=["GET", "POST"])
 def webhook():
+    # 1. Verificación del Token (GET)
     if request.method == "GET":
         mode      = request.args.get('hub.mode')
         token     = request.args.get('hub.verify_token')
@@ -291,275 +296,323 @@ def webhook():
             return challenge, 200
         return "❌ Token inválido", 403
 
-    # POST: mensaje entrante
+    # 2. Procesar Mensaje Entrante (POST)
     data = request.get_json()
     try:
+        if not data or 'entry' not in data:
+            return jsonify({"status": "no entry"}), 200
+
         change = data['entry'][0]['changes'][0]['value']
+        
+        # Si no hay mensajes (pueden ser estados de lectura, etc), ignoramos
         if 'messages' not in change:
             return jsonify({"status": "no messages"}), 200
 
         mensaje  = change['messages'][0]
         telefono = mensaje['from']
-        tipo     = mensaje['type']
+        
+        # (Opcional) Evitar responder a mensajes muy viejos para no hacer spam si se atora la cola
+        # timestamp = int(mensaje.get('timestamp', 0))
+        # ... logica de tiempo ...
 
-        # Texto (botón o normal)
-        texto = ""
-        if "interactive" in mensaje and mensaje["interactive"].get("type") == "button_reply":
-            btn_title = mensaje["interactive"]["button_reply"]["title"].strip()
-            texto     = btn_title
-            tipo      = "text"
-        elif "text" in mensaje and "body" in mensaje["text"]:
-            texto = mensaje["text"]["body"].strip()
-            tipo  = "text"
-
-        usuario = cargar_sesion(telefono)
-        txt = (texto or "").strip().lower()
-
-        # ---------------- A) Reinicio con QUIERO PARTICIPAR ----------------
-        if "QUIERO PARTICIPAR" in texto.upper():
-            usuario = {"paso": 0, "respuestas": {}, "tickets": []}
-
-            import re
-            # Detectar directamente el código "VXXX" en el mensaje
-            m = re.search(r"\bV\d{3}\b", texto.upper())
-            vendedor_id = m.group(0) if m else None
-
-            if vendedor_id:
-                vendedor_nombre = VENDEDORES.get(vendedor_id, vendedor_id)
-            else:
-                vendedor_nombre = "Sin vendedor"
-
-            usuario["respuestas"]["vendedor"] = vendedor_nombre
-            guardar_sesion(telefono, usuario)
-
-            dbg(f"🧾 Vendedor detectado para {telefono}: {vendedor_nombre}")
-
-            # Mensajes de bienvenida
-            wsend(telefono, "👋 ¡Hola! Bienvenido al *Buen Fin Indiana* ⚡")
-            wsend(telefono, PREGUNTAS[0])  # nombre
-            return jsonify({"status": "inicio"}), 200
-
-        # ---------------- B) No hay sesión todavía ----------------
-        if not usuario:
-            wsend(telefono, BIENVENIDA)
-            return jsonify({"status": "esperando inicio"}), 200
-
-        # ---------------- C) Comando SALIR ----------------
-        if texto.upper() == "SALIR":
-            usuario["paso"] = -1
-            guardar_sesion(telefono, usuario)
-            wsend(telefono, "✅ Gracias, puedes volver más tarde escribiendo *QUIERO PARTICIPAR*.")
-            return jsonify({"status": "salir"}), 200
-
-        # ---------------- D) Paso 99: ¿Otro ticket? (Sí/No) ----------------
-        if usuario.get("paso") == 99:
-            if txt in ("sí", "si"):
-                # Conserva datos base (no se vuelven a pedir)
-                usuario["paso"] = TOTAL_CAMPOS  # directamente pedir foto del 2º ticket
-                guardar_sesion(telefono, usuario)
-                wsend(telefono, "📸 Perfecto, envía una *foto clara* de tu *2º ticket* de compra participante.")
-                return jsonify({"status": "esperando foto 2do ticket"}), 200
-
-            if txt in ("no", "n"):
-                usuario["paso"] = -1
-                guardar_sesion(telefono, usuario)
-                wsend(telefono, "🙌 ¡Gracias por participar en el *Buen Fin Indiana*! 🎁\nPronto recibirás noticias.")
-                eliminar_sesion(telefono)
-                return jsonify({"status": "fin"}), 200
-
-            wsend(telefono, "Responde *Sí* si tienes otro ticket o *No* para terminar.")
-            return jsonify({"status": "recordatorio paso 99"}), 200
-
-        # ---------------- E) Flujo de preguntas (texto/botones) -------------
-        if usuario.get("paso", 0) < TOTAL_CAMPOS:
-            idx = usuario["paso"]
-            campo = CAMPOS[idx]
-
-            # 0) nombre
-            if campo == "nombre":
-                usuario["respuestas"]["nombre"] = texto
-                usuario["paso"] += 1
-                guardar_sesion(telefono, usuario)
-                wsend(telefono, PREGUNTAS[1])  # Pregunta tienda
-                return jsonify({"status": "nombre ok"}), 200
-
-            # 1) tienda
-            if campo == "tienda":
-                usuario["respuestas"]["tienda"] = texto
-                usuario["paso"] += 1
-                guardar_sesion(telefono, usuario)
-                wsend(telefono, PREGUNTAS[2])  # Pregunta RFC
-                return jsonify({"status": "tienda ok"}), 200
-
-            # 2) rfc_nombre
-            if campo == "rfc_nombre":
-                usuario["respuestas"]["rfc_nombre"] = texto
-                usuario["paso"] += 1
-                guardar_sesion(telefono, usuario)
-                # CORRECCIÓN: Aquí pedimos el CORREO explícitamente
-                wsend(telefono, PREGUNTAS[3]) 
-                return jsonify({"status": "rfc_nombre ok"}), 200
-
-            # 3) correo electrónico
-            if campo == "correo":
-                # Validar correo con regex simple
-                import re
-                patron = r"^[\w\.-]+@[\w\.-]+\.\w+$"
-                if not re.match(patron, texto):
-                    wsend(telefono, "❌ El correo no parece válido.\nPor favor ingresa un *correo electrónico* válido (ejemplo: nombre@gmail.com).")
-                    return jsonify({"status": "correo inválido"}), 200
-
-                usuario["respuestas"]["correo"] = texto
-                usuario["paso"] += 1
-                guardar_sesion(telefono, usuario)
-
-                # AHORA SÍ: Pedimos la Ocupación con botones
-                wa.send_reply_button(
-                    recipient_id=telefono,
-                    button={
-                        "type": "button",
-                        "body": {"text": "¿Cuál es tu *ocupación principal*?"},
-                        "action": {
-                            "buttons": [
-                                {"type": "reply", "reply": {"id": "1", "title": "Electricista"}},
-                                {"type": "reply", "reply": {"id": "2", "title": "Contratista"}},
-                                {"type": "reply", "reply": {"id": "3", "title": "Otro"}},
-                            ]
-                        },
-                    },
-                )
-                return jsonify({"status": "correo ok"}), 200
-
-            # 4) ocupacion (botón)
-            if campo == "ocupacion":
-                usuario["respuestas"]["ocupacion"] = texto
-                usuario["paso"] += 1
-                guardar_sesion(telefono, usuario)
-
-                # Enviar mensaje con opciones numeradas para MEDIO
-                wsend(
-                    telefono,
-                    "📢 ¿Por qué medio te enteraste de la promoción?\n\n"
-                    "1️⃣ Radio\n"
-                    "2️⃣ Cartel publicitario\n"
-                    "3️⃣ En tienda\n"
-                    "4️⃣ Redes sociales\n\n"
-                    "Por favor, responde con el *número* de tu opción (1–4)."
-                )
-                return jsonify({"status": "ocupacion ok"}), 200
-
-            # 5) medio (validación numérica 1–4)
-            if campo == "medio":
-                validos = ["1", "2", "3", "4"]
-                if texto not in validos:
-                    wsend(telefono, "❌ Por favor escribe solo el número (1, 2, 3 o 4).")
-                    return jsonify({"status": "respuesta inválida (medio)"}), 200
-
-                opciones = {
-                    "1": "Radio",
-                    "2": "Cartel publicitario",
-                    "3": "En tienda",
-                    "4": "Redes sociales"
-                }
-
-                usuario["respuestas"]["medio"] = opciones[texto]
-                usuario["paso"] += 1
-                guardar_sesion(telefono, usuario)
-
-                # Pasamos a pedir la foto del ticket
-                wsend(
-                    telefono,
-                    "📸 ¡Genial!\nEnvía una *foto clara* de tu *ticket/factura* participante.\n"
-                    "Asegúrate que se vea: Folio, Fecha, Monto y Productos Indiana."
-                )
-                return jsonify({"status": "medio ok, pedir foto"}), 200
-
-        # ---------------- F) Esperando FOTO (TOTAL_CAMPOS) ------------------
-        if usuario and usuario.get("paso") == TOTAL_CAMPOS and tipo != "image":
-            if tipo == "document":
-                document = mensaje.get("document", {})
-                filename = document.get("filename", "archivo")
-                wsend(
-                    telefono,
-                    f"❌ Recibí un archivo ({filename}) pero necesito una *imagen* de tu ticket (JPG/PNG)."
-                )
-            elif tipo == "text":
-                wsend(telefono, "❌ Recibí texto, pero necesito una *imagen* de tu ticket (JPG/PNG).")
-            else:
-                wsend(telefono, "❌ Tipo de archivo no válido. Envíe una *imagen* (JPG/PNG).")
-            return jsonify({"status": f"archivo no válido: {tipo}"}), 200
-
-        # ---------------- G) Procesar FOTO, asignar premio y loguear --------
-        if tipo == "image" and usuario and usuario.get("paso") == TOTAL_CAMPOS:
-            media_id = mensaje["image"]["id"]
-            usuario["respuestas"]["ticket_photo"] = f"media:{media_id}"
-            usuario["respuestas"]["timestamp"] = datetime.now().isoformat()
-
-            # OCR / Validación
-            wsend(telefono, '⏳ Procesando tu ticket, por favor espera...')
-            resultado = validar_ticket_desde_media(media_id, token_facebook, telefono)
-            print("Resultado OCR:", resultado)
-
-            monto_ticket = resultado.get("monto")
-            path_ticket = resultado.get("nombre_archivo")
-            motivo_ocr  = resultado.get("motivo", "")
-
-            nuevo_ticket = usuario["respuestas"].copy()
-
-            if resultado.get("valido"):
-                wsend(
-                    telefono,
-                    "✅ Tu ticket fue recibido y leído correctamente. "
-                    "Será validado por nuestro equipo."
-                )
-                nuevo_ticket["premio"] = "Pendiente de validación"
-            else:
-                wsend(
-                    telefono,
-                    "❌ No pudimos leer correctamente tu ticket. "
-                    "Será revisado manualmente por nuestro equipo."
-                )
-                nuevo_ticket["premio"] = "Revisión manual"
-
-            wsend(telefono, VALIDACION_MSG)
-
-            # Datos para Sheets
-            datos_generales = {
-                "telefono": telefono,
-                "nombre": usuario["respuestas"].get("nombre", ""),
-                "tienda": usuario["respuestas"].get("tienda", ""),
-                "rfc_nombre": usuario["respuestas"].get("rfc_nombre", ""),
-                "correo": usuario["respuestas"].get("correo", ""),  # 👈 AGREGAR ESTO
-                "ocupacion": usuario["respuestas"].get("ocupacion", ""),
-                "medio": usuario["respuestas"].get("medio", ""),
-                "monto": monto_ticket,
-                "motivo": motivo_ocr,
-                "vendedor": usuario["respuestas"].get("vendedor", "Sin vendedor"),
-                "nombre_archivo": f"{URL_SERVER}/catalogo_img/{path_ticket}" if path_ticket else "",
-                "premio": nuevo_ticket.get("premio", "")
-            }
-            # Historial
-            usuario.setdefault("tickets", []).append(nuevo_ticket)
-            guardar_sesion(telefono, usuario)
-
-            # Log a Sheets
-            try:
-                registrar_ticket_en_sheets(datos_generales, nuevo_ticket)
-            except Exception as e:
-                print("❌ registrar_ticket_en_sheets error:", e, flush=True)
-
-            # Preguntar por otro ticket
-            usuario["paso"] = 99
-            guardar_sesion(telefono, usuario)
-            wsend(telefono, "¿Tienes *otro ticket*? (Sí / No)")
-            return jsonify({"status": "ticket recibido"}), 200
-
-        # Nada más que hacer
-        return jsonify({"status": "sin cambios"}), 200
+        # ------------------------------------------------------
+        #  RESPUESTA ÚNICA: CAMPAÑA CERRADA
+        # ------------------------------------------------------
+        # No leemos sesión, no validamos texto, no procesamos fotos.
+        # Simplemente respondemos el mensaje de cierre.
+        
+        wsend(telefono, BIENVENIDA)
+        
+        return jsonify({"status": "mensaje de cierre enviado"}), 200
 
     except Exception as e:
         print("❌ Error procesando mensaje:", e, flush=True)
-        return jsonify({"error": str(e)}), 500
+        # Retornamos 200 para que WhatsApp no siga reintentando enviarnos el mismo mensaje
+        return jsonify({"error": str(e)}), 200
+
+
+# ------------------ Webhook ------------------
+# @app.route("/webhook", methods=["GET", "POST"])
+# @app.route("/webhook/", methods=["GET", "POST"])
+# def webhook():
+#     if request.method == "GET":
+#         mode      = request.args.get('hub.mode')
+#         token     = request.args.get('hub.verify_token')
+#         challenge = request.args.get('hub.challenge')
+#         if mode == "subscribe" and token == WEBHOOK_VERIFY_TOKEN:
+#             print("✅ Webhook verificado exitosamente")
+#             return challenge, 200
+#         return "❌ Token inválido", 403
+
+#     # POST: mensaje entrante
+#     data = request.get_json()
+#     try:
+#         change = data['entry'][0]['changes'][0]['value']
+#         if 'messages' not in change:
+#             return jsonify({"status": "no messages"}), 200
+
+#         mensaje  = change['messages'][0]
+#         telefono = mensaje['from']
+#         tipo     = mensaje['type']
+
+#         # Texto (botón o normal)
+#         texto = ""
+#         if "interactive" in mensaje and mensaje["interactive"].get("type") == "button_reply":
+#             btn_title = mensaje["interactive"]["button_reply"]["title"].strip()
+#             texto     = btn_title
+#             tipo      = "text"
+#         elif "text" in mensaje and "body" in mensaje["text"]:
+#             texto = mensaje["text"]["body"].strip()
+#             tipo  = "text"
+
+#         #usuario = cargar_sesion(telefono)
+#         txt = (texto or "").strip().lower()
+
+        # ---------------- A) Reinicio con QUIERO PARTICIPAR ----------------
+        #if "QUIERO PARTICIPAR" in texto.upper():
+            #usuario = {"paso": 0, "respuestas": {}, "tickets": []}
+
+            # import re
+            # # Detectar directamente el código "VXXX" en el mensaje
+            # m = re.search(r"\bV\d{3}\b", texto.upper())
+            # vendedor_id = m.group(0) if m else None
+
+            # if vendedor_id:
+            #     vendedor_nombre = VENDEDORES.get(vendedor_id, vendedor_id)
+            # else:
+            #     vendedor_nombre = "Sin vendedor"
+
+            # usuario["respuestas"]["vendedor"] = vendedor_nombre
+            # guardar_sesion(telefono, usuario)
+
+            # dbg(f"🧾 Vendedor detectado para {telefono}: {vendedor_nombre}")
+
+            # Mensajes de bienvenida
+        #wsend(telefono, BIENVENIDA)
+            #wsend(telefono, PREGUNTAS[0])  # nombre
+        #return jsonify({"status": "inicio"}), 200
+
+        # ---------------- B) No hay sesión todavía ----------------
+    #     if not usuario:
+    #         wsend(telefono, BIENVENIDA)
+    #         return jsonify({"status": "esperando inicio"}), 200
+
+    #     # ---------------- C) Comando SALIR ----------------
+    #     if texto.upper() == "SALIR":
+    #         usuario["paso"] = -1
+    #         guardar_sesion(telefono, usuario)
+    #         wsend(telefono, "✅ Gracias, puedes volver más tarde escribiendo *QUIERO PARTICIPAR*.")
+    #         return jsonify({"status": "salir"}), 200
+
+    #     # ---------------- D) Paso 99: ¿Otro ticket? (Sí/No) ----------------
+    #     if usuario.get("paso") == 99:
+    #         if txt in ("sí", "si"):
+    #             # Conserva datos base (no se vuelven a pedir)
+    #             usuario["paso"] = TOTAL_CAMPOS  # directamente pedir foto del 2º ticket
+    #             guardar_sesion(telefono, usuario)
+    #             wsend(telefono, "📸 Perfecto, envía una *foto clara* de tu *2º ticket* de compra participante.")
+    #             return jsonify({"status": "esperando foto 2do ticket"}), 200
+
+    #         if txt in ("no", "n"):
+    #             usuario["paso"] = -1
+    #             guardar_sesion(telefono, usuario)
+    #             wsend(telefono, "🙌 ¡Gracias por participar en el *Buen Fin Indiana*! 🎁\nPronto recibirás noticias.")
+    #             eliminar_sesion(telefono)
+    #             return jsonify({"status": "fin"}), 200
+
+    #         wsend(telefono, "Responde *Sí* si tienes otro ticket o *No* para terminar.")
+    #         return jsonify({"status": "recordatorio paso 99"}), 200
+
+    #     # ---------------- E) Flujo de preguntas (texto/botones) -------------
+    #     if usuario.get("paso", 0) < TOTAL_CAMPOS:
+    #         idx = usuario["paso"]
+    #         campo = CAMPOS[idx]
+
+    #         # 0) nombre
+    #         if campo == "nombre":
+    #             usuario["respuestas"]["nombre"] = texto
+    #             usuario["paso"] += 1
+    #             guardar_sesion(telefono, usuario)
+    #             wsend(telefono, PREGUNTAS[1])  # Pregunta tienda
+    #             return jsonify({"status": "nombre ok"}), 200
+
+    #         # 1) tienda
+    #         if campo == "tienda":
+    #             usuario["respuestas"]["tienda"] = texto
+    #             usuario["paso"] += 1
+    #             guardar_sesion(telefono, usuario)
+    #             wsend(telefono, PREGUNTAS[2])  # Pregunta RFC
+    #             return jsonify({"status": "tienda ok"}), 200
+
+    #         # 2) rfc_nombre
+    #         if campo == "rfc_nombre":
+    #             usuario["respuestas"]["rfc_nombre"] = texto
+    #             usuario["paso"] += 1
+    #             guardar_sesion(telefono, usuario)
+    #             # CORRECCIÓN: Aquí pedimos el CORREO explícitamente
+    #             wsend(telefono, PREGUNTAS[3]) 
+    #             return jsonify({"status": "rfc_nombre ok"}), 200
+
+    #         # 3) correo electrónico
+    #         if campo == "correo":
+    #             # Validar correo con regex simple
+    #             import re
+    #             patron = r"^[\w\.-]+@[\w\.-]+\.\w+$"
+    #             if not re.match(patron, texto):
+    #                 wsend(telefono, "❌ El correo no parece válido.\nPor favor ingresa un *correo electrónico* válido (ejemplo: nombre@gmail.com).")
+    #                 return jsonify({"status": "correo inválido"}), 200
+
+    #             usuario["respuestas"]["correo"] = texto
+    #             usuario["paso"] += 1
+    #             guardar_sesion(telefono, usuario)
+
+    #             # AHORA SÍ: Pedimos la Ocupación con botones
+    #             wa.send_reply_button(
+    #                 recipient_id=telefono,
+    #                 button={
+    #                     "type": "button",
+    #                     "body": {"text": "¿Cuál es tu *ocupación principal*?"},
+    #                     "action": {
+    #                         "buttons": [
+    #                             {"type": "reply", "reply": {"id": "1", "title": "Electricista"}},
+    #                             {"type": "reply", "reply": {"id": "2", "title": "Contratista"}},
+    #                             {"type": "reply", "reply": {"id": "3", "title": "Otro"}},
+    #                         ]
+    #                     },
+    #                 },
+    #             )
+    #             return jsonify({"status": "correo ok"}), 200
+
+    #         # 4) ocupacion (botón)
+    #         if campo == "ocupacion":
+    #             usuario["respuestas"]["ocupacion"] = texto
+    #             usuario["paso"] += 1
+    #             guardar_sesion(telefono, usuario)
+
+    #             # Enviar mensaje con opciones numeradas para MEDIO
+    #             wsend(
+    #                 telefono,
+    #                 "📢 ¿Por qué medio te enteraste de la promoción?\n\n"
+    #                 "1️⃣ Radio\n"
+    #                 "2️⃣ Cartel publicitario\n"
+    #                 "3️⃣ En tienda\n"
+    #                 "4️⃣ Redes sociales\n\n"
+    #                 "Por favor, responde con el *número* de tu opción (1–4)."
+    #             )
+    #             return jsonify({"status": "ocupacion ok"}), 200
+
+    #         # 5) medio (validación numérica 1–4)
+    #         if campo == "medio":
+    #             validos = ["1", "2", "3", "4"]
+    #             if texto not in validos:
+    #                 wsend(telefono, "❌ Por favor escribe solo el número (1, 2, 3 o 4).")
+    #                 return jsonify({"status": "respuesta inválida (medio)"}), 200
+
+    #             opciones = {
+    #                 "1": "Radio",
+    #                 "2": "Cartel publicitario",
+    #                 "3": "En tienda",
+    #                 "4": "Redes sociales"
+    #             }
+
+    #             usuario["respuestas"]["medio"] = opciones[texto]
+    #             usuario["paso"] += 1
+    #             guardar_sesion(telefono, usuario)
+
+    #             # Pasamos a pedir la foto del ticket
+    #             wsend(
+    #                 telefono,
+    #                 "📸 ¡Genial!\nEnvía una *foto clara* de tu *ticket/factura* participante.\n"
+    #                 "Asegúrate que se vea: Folio, Fecha, Monto y Productos Indiana."
+    #             )
+    #             return jsonify({"status": "medio ok, pedir foto"}), 200
+
+    #     # ---------------- F) Esperando FOTO (TOTAL_CAMPOS) ------------------
+    #     if usuario and usuario.get("paso") == TOTAL_CAMPOS and tipo != "image":
+    #         if tipo == "document":
+    #             document = mensaje.get("document", {})
+    #             filename = document.get("filename", "archivo")
+    #             wsend(
+    #                 telefono,
+    #                 f"❌ Recibí un archivo ({filename}) pero necesito una *imagen* de tu ticket (JPG/PNG)."
+    #             )
+    #         elif tipo == "text":
+    #             wsend(telefono, "❌ Recibí texto, pero necesito una *imagen* de tu ticket (JPG/PNG).")
+    #         else:
+    #             wsend(telefono, "❌ Tipo de archivo no válido. Envíe una *imagen* (JPG/PNG).")
+    #         return jsonify({"status": f"archivo no válido: {tipo}"}), 200
+
+    #     # ---------------- G) Procesar FOTO, asignar premio y loguear --------
+    #     if tipo == "image" and usuario and usuario.get("paso") == TOTAL_CAMPOS:
+    #         media_id = mensaje["image"]["id"]
+    #         usuario["respuestas"]["ticket_photo"] = f"media:{media_id}"
+    #         usuario["respuestas"]["timestamp"] = datetime.now().isoformat()
+
+    #         # OCR / Validación
+    #         wsend(telefono, '⏳ Procesando tu ticket, por favor espera...')
+    #         resultado = validar_ticket_desde_media(media_id, token_facebook, telefono)
+    #         print("Resultado OCR:", resultado)
+
+    #         monto_ticket = resultado.get("monto")
+    #         path_ticket = resultado.get("nombre_archivo")
+    #         motivo_ocr  = resultado.get("motivo", "")
+
+    #         nuevo_ticket = usuario["respuestas"].copy()
+
+    #         if resultado.get("valido"):
+    #             wsend(
+    #                 telefono,
+    #                 "✅ Tu ticket fue recibido y leído correctamente. "
+    #                 "Será validado por nuestro equipo."
+    #             )
+    #             nuevo_ticket["premio"] = "Pendiente de validación"
+    #         else:
+    #             wsend(
+    #                 telefono,
+    #                 "❌ No pudimos leer correctamente tu ticket. "
+    #                 "Será revisado manualmente por nuestro equipo."
+    #             )
+    #             nuevo_ticket["premio"] = "Revisión manual"
+
+    #         wsend(telefono, VALIDACION_MSG)
+
+    #         # Datos para Sheets
+    #         datos_generales = {
+    #             "telefono": telefono,
+    #             "nombre": usuario["respuestas"].get("nombre", ""),
+    #             "tienda": usuario["respuestas"].get("tienda", ""),
+    #             "rfc_nombre": usuario["respuestas"].get("rfc_nombre", ""),
+    #             "correo": usuario["respuestas"].get("correo", ""),  # 👈 AGREGAR ESTO
+    #             "ocupacion": usuario["respuestas"].get("ocupacion", ""),
+    #             "medio": usuario["respuestas"].get("medio", ""),
+    #             "monto": monto_ticket,
+    #             "motivo": motivo_ocr,
+    #             "vendedor": usuario["respuestas"].get("vendedor", "Sin vendedor"),
+    #             "nombre_archivo": f"{URL_SERVER}/catalogo_img/{path_ticket}" if path_ticket else "",
+    #             "premio": nuevo_ticket.get("premio", "")
+    #         }
+    #         # Historial
+    #         usuario.setdefault("tickets", []).append(nuevo_ticket)
+    #         guardar_sesion(telefono, usuario)
+
+    #         # Log a Sheets
+    #         try:
+    #             registrar_ticket_en_sheets(datos_generales, nuevo_ticket)
+    #         except Exception as e:
+    #             print("❌ registrar_ticket_en_sheets error:", e, flush=True)
+
+    #         # Preguntar por otro ticket
+    #         usuario["paso"] = 99
+    #         guardar_sesion(telefono, usuario)
+    #         wsend(telefono, "¿Tienes *otro ticket*? (Sí / No)")
+    #         return jsonify({"status": "ticket recibido"}), 200
+
+    #     # Nada más que hacer
+    #     return jsonify({"status": "sin cambios"}), 200
+
+    # except Exception as e:
+    #     print("❌ Error procesando mensaje:", e, flush=True)
+    #     return jsonify({"error": str(e)}), 500
 
 # ------------------ Catálogo de imágenes ------------------
 
